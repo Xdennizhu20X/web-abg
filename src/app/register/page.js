@@ -1,8 +1,11 @@
 'use client';
-
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { registerUser } from '../../lib/api';
+import { useAuth } from '@/context/AuthContext';
+import Swal from 'sweetalert2';
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -10,16 +13,86 @@ export default function RegisterPage() {
     ci: '',
     email: '',
     password: '',
+    telefono: '',
+    rol: 'tecnico'
   });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { login } = useAuth(); // Usamos el contexto de autenticación
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    console.log('Registrando usuario:', form);
+    setIsLoading(true);
+    setError('');
+
+    // Validaciones básicas
+    if (!form.nombre || !form.ci || !form.email || !form.password) {
+      setError('Todos los campos son obligatorios');
+      setIsLoading(false);
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      setError('El formato del email no es válido');
+      setIsLoading(false);
+      return;
+    }
+
+    if (form.password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      setIsLoading(false);
+      return;
+    }
+
+    const ciRegex = /^\d{10}$/;
+    if (!ciRegex.test(form.ci)) {
+      setError('La cédula debe tener exactamente 10 dígitos');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Registrar al usuario
+      const registerResponse = await registerUser(form);
+
+      // Iniciar sesión automáticamente después del registro
+      await login({
+        email: form.email,
+        password: form.password
+      });
+
+      await Swal.fire({
+        title: '¡Registro exitoso!',
+        text: 'Tu cuenta ha sido creada correctamente',
+        icon: 'success',
+        confirmButtonText: 'Continuar',
+        confirmButtonColor: '#E10600',
+      });
+
+      // Redirigir al dashboard
+      router.push('/dashboard');
+      
+    } catch (err) {
+      setError(err.message || 'Ocurrió un error al registrarse');
+      console.error('Register error:', err);
+      
+      await Swal.fire({
+        title: 'Error',
+        text: err.message || 'Ocurrió un error al registrarse',
+        icon: 'error',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#E10600',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f9fafb] px-4">
-      <div className="bg-gray-200/50 p-8 rounded-2xl shadow-xl w-full max-w-sm border border-gray-300">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm border border-gray-300">
         
         {/* Logo institucional */}
         <div className="flex justify-center mb-6">
@@ -34,9 +107,15 @@ export default function RegisterPage() {
 
         <div className="w-full text-center">
           <h1 className="text-xl font-semibold bg-gradient-to-r from-yellow-400 via-blue-500 to-red-500 inline-block text-transparent bg-clip-text mb-4">
-            Registro en ABG
+            Registro de Técnico
           </h1>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
@@ -50,15 +129,17 @@ export default function RegisterPage() {
               required
             />
           </div>
-                    <div>
-            <label className="block text-sm font-medium text-gray-700">Cedula de Identidad</label>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Cédula de Identidad</label>
             <input
               type="text"
               value={form.ci}
               onChange={(e) => setForm({ ...form, ci: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#F4C300] focus:outline-none"
-              placeholder="Tu nombre completo"
+              placeholder="Tu número de cédula"
               required
+              maxLength="10"
             />
           </div>
 
@@ -75,6 +156,19 @@ export default function RegisterPage() {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700">Teléfono</label>
+            <input
+              type="tel"
+              value={form.telefono}
+              onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#F4C300] focus:outline-none"
+              placeholder="0987654321"
+              pattern="[\d\s+-]{7,15}"
+              title="Número de teléfono (7-15 dígitos, puede incluir +, - o espacios)"
+            />
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700">Contraseña</label>
             <input
               type="password"
@@ -82,14 +176,18 @@ export default function RegisterPage() {
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-700 focus:ring-2 focus:ring-[#F4C300] focus:outline-none"
               required
+              minLength="6"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-[#E10600] hover:bg-red-700 text-white font-medium py-2 rounded-md transition"
+            disabled={isLoading}
+            className={`w-full bg-[#E10600] hover:bg-red-700 text-white font-medium py-2 rounded-md transition ${
+              isLoading ? 'opacity-70 cursor-not-allowed' : ''
+            }`}
           >
-            Registrarse
+            {isLoading ? 'Registrando...' : 'Registrarse como Técnico'}
           </button>
         </form>
 
