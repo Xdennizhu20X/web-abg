@@ -1,17 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Swal from 'sweetalert2';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
 
+  const [token, setToken] = useState('');
   const [password, setPassword] = useState('');
   const [confirmarPassword, setConfirmarPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const t = searchParams.get('token');
+    if (t) setToken(t);
+  }, [searchParams]);
 
   const handleReset = async (e) => {
     e.preventDefault();
@@ -28,13 +33,16 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`http://localhost:3000/api/auth/reset-password?token=${token}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ nuevaPassword: password }),
-      });
+      const res = await fetch(
+        `http://localhost:3000/api/auth/reset-password?token=${token}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ nuevaPassword: password }),
+        }
+      );
 
       const data = await res.json();
 
