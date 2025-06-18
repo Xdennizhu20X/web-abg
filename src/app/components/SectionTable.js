@@ -26,7 +26,7 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
         try {
           setLoading(true);
           const token = localStorage.getItem("token");
-          const res = await axios.get("http://localhost:3000/api/movilizaciones", {
+          const res = await axios.get("https://back-abg.onrender.com/api/movilizaciones", {
             headers: { Authorization: `Bearer ${token}` },
           });
           setLocalData(res.data);

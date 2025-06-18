@@ -20,7 +20,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
   useEffect(() => {
     const fetchPendientesCount = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/movilizaciones/pendientes/count');
+        const response = await axios.get('https://back-abg.onrender.com/api/movilizaciones/pendientes/count');
         setPendientesCount(response.data.totalPendientes);
       } catch (error) {
         console.error('Error al obtener el conteo de pendientes:', error);

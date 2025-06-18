@@ -28,7 +28,7 @@ export default function ResetPasswordClient() {
     setLoading(true);
 
     try {
-      const res = await fetch(`http://localhost:3000/api/auth/reset-password?token=${token}`, {
+      const res = await fetch(`https://back-abg.onrender.com/api/auth/reset-password?token=${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nuevaPassword: password }),

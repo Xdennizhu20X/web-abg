@@ -19,7 +19,7 @@ export default function CertificadoZoosanitario() {
     const fetchSolicitud = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`http://localhost:3000/api/movilizaciones/${id}`, {
+        const res = await axios.get(`https://back-abg.onrender.com/api/movilizaciones/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSolicitud(res.data);

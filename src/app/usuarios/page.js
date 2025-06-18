@@ -13,7 +13,7 @@ export default function UsuariosKanban() {
 
     const fetchUsuarios = async () => {
       try {
-        const res = await fetch('http://localhost:3000/api/usuarios/admin/usuarios', {
+        const res = await fetch('https://back-abg.onrender.com/api/usuarios/admin/usuarios', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
