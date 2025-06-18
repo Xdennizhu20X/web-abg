@@ -100,13 +100,13 @@ const fetchData = async (params = {}) => {
         {isOpen && (
           <div className="fixed inset-0 bg-black/20 z-40 sm:hidden" onClick={toggleSidebar} />
         )}
-        <main className="p-6 bg-gray-50 h-auto">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Solicitudes</h1>
+        <main className="p-4 bg-gray-50 h-auto">
+          <h1 className="text-2xl font-bold text-[#6e328a] mb-4">Solicitudes</h1>
           
           <div className="bg-white p-4 rounded-lg shadow mb-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                <label className="block text-sm font-medium text-[#6e328a] mb-1">Estado</label>
                 <select
                   name="estado"
                   value={filters.estado || ""}
@@ -121,7 +121,7 @@ const fetchData = async (params = {}) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre granjero</label>
+                <label className="block text-sm font-medium text-[#6e328a] mb-1">Nombre granjero</label>
                 <input
                   type="text"
                   name="nombre"
@@ -133,7 +133,7 @@ const fetchData = async (params = {}) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Fecha inicio</label>
+                <label className="block text-sm font-medium text-[#6e328a] mb-1">Fecha inicio</label>
                 <input
                   type="date"
                   name="fecha_inicio"
@@ -144,7 +144,7 @@ const fetchData = async (params = {}) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Fecha fin</label>
+                <label className="block text-sm font-medium text-[#6e328a] mb-1">Fecha fin</label>
                 <input
                   type="date"
                   name="fecha_fin"
@@ -164,7 +164,7 @@ const fetchData = async (params = {}) => {
               </button>
               <button
                 onClick={handleApplyFilters}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="px-4 py-2 bg-[#6e328a] text-white rounded-md hover:bg-blue-700"
               >
                 Filtrar
               </button>

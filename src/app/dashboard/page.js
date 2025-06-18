@@ -1,32 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Sidebar from '@/app/components/slidebar'; // Asegúrate de que se llame correctamente "Sidebar"
+import Sidebar from '@/app/components/slidebar';
 import SectionTable from '@/app/components/SectionTable';
 import { Diagrama } from '@/app/components/diagrama';
-import { useAuth } from '@/context/AuthContext'; // Hook de autenticación
+import { useAuth } from '@/context/AuthContext';
 
 export default function DashboardHome() {
   const [isOpen, setIsOpen] = useState(true);
   const toggleSidebar = () => setIsOpen(!isOpen);
 
-  const { user } = useAuth(); // Obtener usuario
+  const { user } = useAuth();
 
   useEffect(() => {
-    console.log('Usuario:', user); // Para verificar qué datos llegan
+    console.log('Usuario:', user);
   }, [user]);
 
-  // Mostrar pantalla de carga mientras se obtiene el usuario
   if (!user) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-lg text-gray-600">Cargando panel...</p>
+      <div className="flex items-center justify-center h-screen bg-white">
+        <p className="text-lg text-gray-500 animate-pulse">Cargando panel...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex">
+    <div className="flex bg-white min-h-screen">
       <Sidebar isOpen={isOpen} toggleSidebar={toggleSidebar} />
 
       <div
@@ -42,23 +41,29 @@ export default function DashboardHome() {
         )}
 
         <main className="p-6 bg-gray-50 h-auto ">
-          <h2 className="text-3xl font-semibold text-center bg-gradient-to-r from-yellow-400 via-blue-500 to-red-500 inline-block text-transparent bg-clip-text mb-4">
+          <h2 className="text-3xl font-bold text-center text-[#6e328a] mb-2">
             Bienvenido al Panel{user?.nombre ? `, ${user.nombre}` : ''}
           </h2>
-          <p className="text-gray-600">
+          <p className="text-gray-600 text-center mb-6">
             Este es el panel de gestión de movilización de ganado de ABG.
           </p>
         </main>
 
-        {/* Solo el admin ve el Diagrama */}
         {user.rol === 'admin' && (
-          <div className="w-full p-2">
-            <Diagrama />
+          <div className="w-full px-4 pt-4">
+            <div className="bg-white border border-gray-200 rounded-xl shadow p-4">
+              <h3 className="text-lg font-semibold text-[#6e328a] mb-3">
+                Resumen de Actividad
+              </h3>
+              <Diagrama />
+            </div>
           </div>
         )}
 
-        <div className="w-full p-2">
-          <SectionTable />
+        <div className="w-full px-4 pt-4 pb-8">
+          <div className="bg-white border border-gray-200 rounded-xl shadow p-4">
+            <SectionTable />
+          </div>
         </div>
       </div>
     </div>

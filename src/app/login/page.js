@@ -104,72 +104,77 @@ export default function LoginPage() {
 };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f9fafb] px-4">
-      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm border border-gray-200">
-        <div className="flex justify-center mb-6">
-          <Image
-            src="/logo_abg.png"
-            alt="Logo ABG"
-            width={220}
-            height={80}
-            priority
-          />
-        </div>
-
-        <div className='w-full text-center'>
-          <h1 className="text-xl font-semibold text-center bg-gradient-to-r from-yellow-400 via-blue-500 to-red-500 inline-block text-transparent bg-clip-text mb-4">
-            Gestión de movilización de ABG
-          </h1>
-        </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Correo electrónico</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#F4C300] focus:outline-none"
-              placeholder="usuario@abg.gob.ec"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Contraseña</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md focus:ring-2 focus:ring-[#F4C300] focus:outline-none"
-              required
-              minLength="6"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`w-full bg-[#E10600] hover:bg-red-700 text-white font-medium py-2 rounded-md transition ${isLoading ? 'opacity-70 cursor-not-allowed' : ''
-              }`}
-          >
-            {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
-          </button>
-        </form>
-
-        <p className="text-sm text-center text-gray-600 mt-5">
-          ¿No tienes cuenta?{' '}
-          <Link href="/register" className="text-[#0033A0] hover:underline font-semibold">
-            Regístrate
-          </Link>
-        </p>
-      </div>
+<div className="min-h-screen flex items-center justify-center bg-white px-4">
+  <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm border border-gray-200">
+    <div className="flex justify-center mb-6">
+      <Image
+        src="/logo_abg.png"
+        alt="Logo ABG"
+        width={200}
+        height={80}
+        priority
+      />
     </div>
+
+    <h1 className="text-xl font-semibold text-center text-[#6e328a] mb-6">
+      Gestión de movilización de ABG
+    </h1>
+
+    {error && (
+      <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
+        {error}
+      </div>
+    )}
+
+    <form onSubmit={handleLogin} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Correo electrónico</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#6e328a] focus:outline-none"
+          placeholder="usuario@abg.gob.ec"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Contraseña</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md focus:ring-2 focus:ring-[#6e328a] focus:outline-none"
+          required
+          minLength="6"
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={isLoading}
+        className={`w-full bg-[#6e328a] hover:bg-[#5b2771] text-white font-medium py-2 rounded-md transition duration-200 ${
+          isLoading ? 'opacity-70 cursor-not-allowed' : ''
+        }`}
+      >
+        {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+      </button>
+    </form>
+
+    <p className="text-sm text-center text-gray-600 mt-5">
+      ¿No tienes cuenta?{' '}
+      <Link href="/register" className="text-[#6e328a] hover:underline font-medium">
+        Regístrate
+      </Link>
+    </p>
+    <p className="text-sm text-center mt-3">
+      <Link href="/forgot-password" className="text-[#6e328a] hover:underline">
+        ¿Olvidaste tu contraseña?
+      </Link>
+    </p>
+  </div>
+</div>
+
   );
 }

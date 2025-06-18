@@ -100,6 +100,10 @@
     }
 }
 
+[data-chart=chart-xxx] {
+  --color-desktop: #6e328a;
+}
+
 
 @layer base {
   * {

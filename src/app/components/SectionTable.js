@@ -3,15 +3,15 @@ import axios from "axios";
 import Link from "next/link";
 
 const statusStyle = {
-  "en revisión": "border border-gray-300 text-gray-700",
-  aprobado: "border border-green-400 text-green-700 bg-green-50",
-  rechazado: "border border-red-400 text-red-700 bg-red-50",
+  "En revisión": "bg-[#f3eaff] text-[#6e328a] border border-[#6e328a]",
+  Aprobado: "bg-[#f3eaff] text-[#6e328a] border border-[#6e328a]",
+  Rechazado: "bg-red-200 text-red-800 border border-red-300",
 };
 
 const statusIcon = {
-  "en revisión": "⚙️",
-  aprobado: "✅",
-  rechazado: "❌",
+  "En revisión": "⚙️",
+  Aprobado: "✅",
+  Rechazado: "❌",
 };
 
 export default function SolicitudesTable({ data: propData, loading: propLoading }) {
@@ -20,7 +20,6 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  // Si no se pasa data desde fuera, carga la data localmente (para dashboard por ejemplo)
   useEffect(() => {
     if (!propData) {
       const fetchData = async () => {
@@ -41,7 +40,6 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
     }
   }, [propData]);
 
-  // Usar los datos que vengan por props, o los que se cargaron localmente
   const data = propData || localData;
   const isLoading = propLoading ?? loading;
 
@@ -53,66 +51,94 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
   const startIndex = (currentPage - 1) * rowsPerPage;
   const currentData = data.slice(startIndex, startIndex + rowsPerPage);
 
-  if (isLoading) return <div className="text-center py-4">Cargando datos...</div>;
+  // Función para normalizar el estado y que coincida con las claves de statusStyle y statusIcon
+  const normalizeEstado = (estado) => {
+    if (!estado) return "";
+    const est = estado.toLowerCase().trim();
+    if (est === "en revisión" || est === "en revision") return "En revisión";
+    if (est === "aprobado") return "Aprobado";
+    if (est === "rechazado") return "Rechazado";
+    return estado; // Si hay otros estados, se devuelve tal cual
+  };
+
+  if (isLoading)
+    return (
+      <div className="text-center py-4 text-[#6e328a] font-semibold">
+        Cargando datos...
+      </div>
+    );
 
   if (!data || data.length === 0) {
-    return <div className="text-center py-4">No hay solicitudes para mostrar.</div>;
+    return (
+      <div className="text-center py-4 text-gray-500">No hay solicitudes para mostrar.</div>
+    );
   }
 
   return (
     <div className="p-4">
-      <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-md bg-white">
+      <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-md bg-white">
         <table className="min-w-full text-sm">
-          <thead className="bg-gray-100 text-left text-gray-600 uppercase text-xs">
+          <thead className="bg-white text-left text-[#6e328a] uppercase text-xs border-b border-gray-200">
             <tr>
-              <th className="p-3">Granjero</th>
-              <th className="p-3">Solicitud</th>
-              <th className="p-3">Estado</th>
-              <th className="p-3">Fecha</th>
-              <th className="p-3">Técnico</th>
+              <th className="p-4 font-semibold">Granjero</th>
+              <th className="p-4 font-semibold">Solicitud</th>
+              <th className="p-4 font-semibold">Estado</th>
+              <th className="p-4 font-semibold">Fecha</th>
+              <th className="p-4 font-semibold">Técnico</th>
             </tr>
           </thead>
           <tbody>
-            {currentData.map((item, idx) => (
-              <tr key={idx} className="border-t hover:bg-gray-50">
-                <td className="p-3 font-medium text-gray-800">
-                  {item.Usuario?.nombre || "—"}
-                </td>
-                <td className="p-3">
-                  <Link
-                    href={`/solicitud/${item.id}`}
-                    className="text-blue-600 hover:underline"
-                  >
-                    Ver solicitud
-                  </Link>
-                </td>
-                <td className="p-3">
-                  <span
-                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusStyle[item.estado] || "border text-gray-500"}`}
-                  >
-                    <span>{statusIcon[item.estado] || "📄"}</span>
-                    {item.estado}
-                  </span>
-                </td>
-                <td className="p-3 text-gray-700">
-                  {item.fecha_solicitud?.slice(0, 10)}
-                </td>
-                <td className="p-3 text-gray-700">
-                  {(item.estado === "aprobado" || item.estado === "rechazado") && item.Validacion?.nombre_tecnico
-                    ? item.Validacion.nombre_tecnico
-                    : "—"}
-                </td>
-              </tr>
-            ))}
+            {currentData.map((item, idx) => {
+              const estadoKey = normalizeEstado(item.estado);
+
+              return (
+                <tr
+                  key={idx}
+                  className="border-t hover:bg-[#f9f5ff] transition duration-200"
+                >
+                  <td className="p-4 text-gray-800 font-medium">
+                    {item.Usuario?.nombre || "—"}
+                  </td>
+                  <td className="p-4">
+                    <Link
+                      href={`/solicitud/${item.id}`}
+                      className="text-[#6e328a] font-medium hover:underline"
+                    >
+                      Ver solicitud
+                    </Link>
+                  </td>
+                  <td className="p-4">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold shadow-sm ${
+                        statusStyle[estadoKey] ||
+                        "border border-gray-300 text-gray-500"
+                      }`}
+                    >
+                      <span>{statusIcon[estadoKey] || "📄"}</span>
+                      {estadoKey}
+                    </span>
+                  </td>
+                  <td className="p-4 text-gray-700">
+                    {item.fecha_solicitud?.slice(0, 10)}
+                  </td>
+                  <td className="p-4 text-gray-700">
+                    {(estadoKey === "Aprobado" || estadoKey === "Rechazado") &&
+                    item.Validacion?.nombre_tecnico
+                      ? item.Validacion.nombre_tecnico
+                      : "—"}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 
         {/* Paginación */}
-        <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-2 bg-gray-50 text-xs text-gray-600">
+        <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 bg-gray-50 text-xs text-gray-600 rounded-b-2xl">
           <div className="flex items-center gap-2">
             <span>Filas por página:</span>
             <select
-              className="border rounded px-2 py-1"
+              className="border border-gray-300 rounded-md px-2 py-1 text-gray-700"
               value={rowsPerPage}
               onChange={(e) => {
                 setRowsPerPage(parseInt(e.target.value));
@@ -128,11 +154,53 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
           </div>
 
           <div className="flex items-center gap-2 mt-2 sm:mt-0">
-            <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
-            <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1}>‹</button>
-            <span>Página {currentPage} de {totalPages}</span>
-            <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>›</button>
-            <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className={`px-2 py-1 rounded hover:bg-[#e3d9ff] transition ${
+                currentPage === 1
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-[#6e328a]"
+              }`}
+            >
+              «
+            </button>
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-2 py-1 rounded hover:bg-[#e3d9ff] transition ${
+                currentPage === 1
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-[#6e328a]"
+              }`}
+            >
+              ‹
+            </button>
+            <span className="px-2 text-gray-700">
+              Página <strong>{currentPage}</strong> de <strong>{totalPages}</strong>
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={`px-2 py-1 rounded hover:bg-[#e3d9ff] transition ${
+                currentPage === totalPages
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-[#6e328a]"
+              }`}
+            >
+              ›
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className={`px-2 py-1 rounded hover:bg-[#e3d9ff] transition ${
+                currentPage === totalPages
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-[#6e328a]"
+              }`}
+            >
+              »
+            </button>
           </div>
         </div>
       </div>
