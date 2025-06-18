@@ -1,9 +1,12 @@
-import dynamic from 'next/dynamic';
+'use client';
 
-const ResetPasswordClient = dynamic(() => import('./ResetPasswordClient'), {
-  ssr: false, // importante para evitar errores en build
-});
+import React, { Suspense } from 'react';
+import ResetPasswordClient from './ResetPasswordClient';
 
 export default function ResetPasswordPage() {
-  return <ResetPasswordClient />;
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <ResetPasswordClient />
+    </Suspense>
+  );
 }
