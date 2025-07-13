@@ -2,8 +2,7 @@
 
 import { useState } from "react"
 import { TrendingUp } from "lucide-react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
-
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import {
   Card,
   CardContent,
@@ -57,22 +56,23 @@ const dataAno = [
 
 const chartConfig = {
   desktop: {
-    label: "Desktop",
+    label: "Solicitudes", // Changed label to Solicitudes
     color: "#6e328a",
   },
 }
 
 export function Diagrama() {
-  const [filter, setFilter] = useState("mes") // "semana", "mes", "año"
+  const [filter, setFilter] = useState("mes");
+  const [dataType, setDataType] = useState('movilizaciones'); // 'movilizaciones' or 'animales'
 
   // Escoger datos según filtro
   const chartData =
-    filter === "semana" ? dataSemana : filter === "mes" ? dataMes : dataAno
+    filter === "semana" ? dataSemana : filter === "mes" ? dataMes : dataAno;
 
   return (
     <Card className="rounded-2xl border-2 border-black/10">
       <CardHeader>
-        <CardTitle>Area Chart</CardTitle>
+        <CardTitle>Bar Chart</CardTitle> {/* Changed title to Bar Chart */}
         <CardDescription>
           Showing total visitors for the last{" "}
           {filter === "semana"
@@ -83,6 +83,19 @@ export function Diagrama() {
         </CardDescription>
       </CardHeader>
 
+      {/* Data Type Filter Buttons */}
+      <div className="flex items-center gap-2 px-6 pb-4">
+        <button
+          onClick={() => setDataType('movilizaciones')}
+          className={`rounded-md px-3 py-1 text-sm font-semibold ${dataType === 'movilizaciones' ? 'bg-purple-600 text-white' : 'bg-gray-200'}`}
+        >
+          Movilizaciones
+        </button>
+        <button
+          onClick={() => setDataType('animales')}
+          className={`rounded-md px-3 py-1 text-sm font-semibold ${dataType === 'animales' ? 'bg-purple-600 text-white' : 'bg-gray-200'}`}
+        >Animales y Aves</button>
+      </div>
       {/* Botones filtro */}
       <div className="flex gap-2 px-6 pb-4">
         {["semana", "mes", "año"].map((item) => (
@@ -102,9 +115,8 @@ export function Diagrama() {
 
       <CardContent className="sm:h-82">
         <ChartContainer config={chartConfig} className="sm:h-82 sm:w-full">
-          <AreaChart
+          <BarChart
             data={chartData}
-            height={200}
             margin={{
               left: 12,
               right: 12,
@@ -116,19 +128,24 @@ export function Diagrama() {
               tickLine={false}
               axisLine={false}
               tickMargin={8}
+              stroke="hsl(var(--chart-foreground))"
+            />
+            <YAxis
+              stroke="hsl(var(--chart-foreground))"
+              position="insideLeft"
+              angle={-90}
+              style={{ textAnchor: 'middle' }}
             />
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent indicator="line" />}
+              content={<ChartTooltipContent indicator="dashed" />} 
             />
-            <Area
+            <Bar
               dataKey="desktop"
-              type="natural"
               fill="var(--color-desktop)"
-              fillOpacity={0.4}
-              stroke="var(--color-desktop)"
+              radius={4} // Added radius for rounded bars
             />
-          </AreaChart>
+          </BarChart>
         </ChartContainer>
       </CardContent>
 
@@ -150,5 +167,5 @@ export function Diagrama() {
         </div>
       </CardFooter>
     </Card>
-  )
+  );
 }

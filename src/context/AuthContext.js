@@ -8,6 +8,7 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     // Recuperar desde localStorage si ya estaba logueado
@@ -18,7 +19,9 @@ export function AuthProvider({ children }) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
     }
+    setMounted(true); // Set mounted to true after localStorage is read
   }, []);
+
 
   const login = async (credentials) => {
     const { token, user } = await loginUser(credentials);
@@ -45,8 +48,9 @@ export function AuthProvider({ children }) {
   };
 
   return (
+    // Only render children if the component has mounted on the client
     <AuthContext.Provider value={{ user, token, login, logout }}>
-      {children}
+      {mounted && children}
     </AuthContext.Provider>
   );
 }

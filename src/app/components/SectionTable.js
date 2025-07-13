@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
 
+import { useRouter } from 'next/navigation';
 const statusStyle = {
   "En revisión": "bg-[#f3eaff] text-[#6e328a] border border-[#6e328a]",
   Aprobado: "bg-[#f3eaff] text-[#6e328a] border border-[#6e328a]",
@@ -15,6 +16,7 @@ const statusIcon = {
 };
 
 export default function SolicitudesTable({ data: propData, loading: propLoading }) {
+  const router = useRouter();
   const [localData, setLocalData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -85,6 +87,7 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
               <th className="p-4 font-semibold">Estado</th>
               <th className="p-4 font-semibold">Fecha</th>
               <th className="p-4 font-semibold">Técnico</th>
+              <th className="p-4 font-semibold">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -126,6 +129,14 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
                     item.Validacion?.nombre_tecnico
                       ? item.Validacion.nombre_tecnico
                       : "—"}
+                  </td>
+                  <td className="p-4">
+                    <button
+                      onClick={() => router.push(`/finalizar-guia/${item.id}`)}
+                      className="bg-[#6e328a] text-white px-4 py-2 rounded hover:bg-[#8a4fad] transition duration-200"
+                    >
+                      Finalizar Guía
+                    </button>
                   </td>
                 </tr>
               );
