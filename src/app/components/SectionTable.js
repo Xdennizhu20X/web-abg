@@ -5,14 +5,14 @@ import Link from "next/link";
 import { useRouter } from 'next/navigation';
 const statusStyle = {
   "En revisión": "bg-[#f3eaff] text-[#6e328a] border border-[#6e328a]",
-  Aprobado: "bg-[#f3eaff] text-[#6e328a] border border-[#6e328a]",
-  Rechazado: "bg-red-200 text-red-800 border border-red-300",
+  "Finalizada": "bg-[#d4edda] text-[#155724] border border-[#c3e6cb]", // Verde para Finalizada
+  "Alerta": "bg-[#fff3cd] text-[#856404] border border-[#ffeeba]",     // Amarillo para Alerta
 };
 
 const statusIcon = {
   "En revisión": "⚙️",
-  Aprobado: "✅",
-  Rechazado: "❌",
+  "Finalizada": "✅", // Checkmark para Finalizada
+  "Alerta": "⚠️",     // Icono de alerta para Alerta
 };
 
 export default function SolicitudesTable({ data: propData, loading: propLoading }) {
@@ -57,8 +57,8 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
   const normalizeEstado = (estado) => {
     if (!estado) return "";
     const est = estado.toLowerCase().trim();
-    if (est === "en revisión" || est === "en revision") return "En revisión";
-    if (est === "aprobado") return "Aprobado";
+    if (est === "finalizada") return "Finalizada";
+    if (est === "alerta") return "Alerta";
     if (est === "rechazado") return "Rechazado";
     return estado; // Si hay otros estados, se devuelve tal cual
   };
@@ -86,7 +86,6 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
               <th className="p-4 font-semibold">Solicitud</th>
               <th className="p-4 font-semibold">Estado</th>
               <th className="p-4 font-semibold">Fecha</th>
-              <th className="p-4 font-semibold">Técnico</th>
               <th className="p-4 font-semibold">Acciones</th>
             </tr>
           </thead>
@@ -123,12 +122,6 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
                   </td>
                   <td className="p-4 text-gray-700">
                     {item.fecha_solicitud?.slice(0, 10)}
-                  </td>
-                  <td className="p-4 text-gray-700">
-                    {(estadoKey === "Aprobado" || estadoKey === "Rechazado") &&
-                    item.Validacion?.nombre_tecnico
-                      ? item.Validacion.nombre_tecnico
-                      : "—"}
                   </td>
                   <td className="p-4">
                     <button

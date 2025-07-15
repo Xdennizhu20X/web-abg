@@ -243,7 +243,7 @@ export function Diagrama() {
             />
             <Bar
               dataKey="solicitudes"
-              fill="var(--color-desktop)"
+              fill="#6e328a"
               radius={4}
             />
             <Bar
