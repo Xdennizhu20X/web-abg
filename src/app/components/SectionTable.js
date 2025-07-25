@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
-
 import { useRouter } from 'next/navigation';
+
 const statusStyle = {
   "En revisión": "bg-[#f3eaff] text-[#6e328a] border border-[#6e328a]",
-  "Finalizada": "bg-[#d4edda] text-[#155724] border border-[#c3e6cb]", // Verde para Finalizada
-  "Alerta": "bg-[#fff3cd] text-[#856404] border border-[#ffeeba]",     // Amarillo para Alerta
+  "Finalizada": "bg- text-[#155724] border border-[#c3e6cb]",
+  "Alerta": "bg-[#fff3cd] text-[#856404] border border-[#ffeeba]",
+  "Rechazado": "bg-[#f8d7da] text-[#721c24] border border-[#f5c6cb]",
 };
 
 const statusIcon = {
   "En revisión": "⚙️",
-  "Finalizada": "✅", // Checkmark para Finalizada
-  "Alerta": "⚠️",     // Icono de alerta para Alerta
+  "Finalizada": "✅",
+  "Alerta": "⚠️",
+  "Rechazado": "❌",
 };
 
 export default function SolicitudesTable({ data: propData, loading: propLoading }) {
@@ -21,6 +23,7 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [downloading, setDownloading] = useState({});
 
   useEffect(() => {
     if (!propData) {
@@ -53,22 +56,116 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
   const startIndex = (currentPage - 1) * rowsPerPage;
   const currentData = data.slice(startIndex, startIndex + rowsPerPage);
 
-  // Función para normalizar el estado y que coincida con las claves de statusStyle y statusIcon
   const normalizeEstado = (estado) => {
     if (!estado) return "";
     const est = estado.toLowerCase().trim();
     if (est === "finalizada") return "Finalizada";
     if (est === "alerta") return "Alerta";
     if (est === "rechazado") return "Rechazado";
-    return estado; // Si hay otros estados, se devuelve tal cual
+    if (est === "aprobado") return "Aprobado";
+    if (est === "pendiente") return "En revisión";
+    return estado;
   };
 
-  if (isLoading)
+  const handleDownloadPDF = async (id) => {
+    try {
+      setDownloading(prev => ({ ...prev, [id]: true }));
+      const token = localStorage.getItem("token");
+      
+      // Descargar el PDF directamente sin verificar estado
+      const response = await fetch(
+        `https://back-abg.onrender.com/api/movilizaciones/${id}/certificado`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          method: 'GET'
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Error al descargar el certificado');
+      }
+
+      // Obtener el nombre del archivo del header Content-Disposition
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = 'certificado.pdf'; // nombre por defecto
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Obtener el blob y crear enlace de descarga
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      
+      link.href = downloadUrl;
+      link.setAttribute('download', filename);
+      link.style.display = 'none'; // Ocultar el enlace
+      
+      document.body.appendChild(link);
+      link.click();
+
+      // Limpieza
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+        setDownloading(prev => ({ ...prev, [id]: false }));
+      }, 100);
+
+    } catch (error) {
+      console.error(`Error al descargar PDF para solicitud ${id}:`, error);
+      alert(`Error: ${error.message}`);
+      setDownloading(prev => ({ ...prev, [id]: false }));
+    }
+  };
+
+  const handleViewPDF = async (id) => {
+    try {
+      setDownloading(prev => ({ ...prev, [id]: true }));
+      const token = localStorage.getItem("token");
+      
+      // Obtener el PDF
+      const response = await fetch(
+        `https://back-abg.onrender.com/api/movilizaciones/${id}/certificado`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          method: 'GET'
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Error al cargar el certificado');
+      }
+
+      // Crear una URL para el blob del PDF
+      const blob = await response.blob();
+      const pdfUrl = URL.createObjectURL(blob);
+      
+      // Abrir el PDF en una nueva pestaña
+      window.open(pdfUrl, '_blank');
+      
+      // Liberar la URL cuando ya no sea necesaria
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000);
+      
+    } catch (error) {
+      console.error(`Error al visualizar PDF para solicitud ${id}:`, error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setDownloading(prev => ({ ...prev, [id]: false }));
+    }
+  };
+
+  if (isLoading) {
     return (
       <div className="text-center py-4 text-[#6e328a] font-semibold">
         Cargando datos...
       </div>
     );
+  }
 
   if (!data || data.length === 0) {
     return (
@@ -86,37 +183,39 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
               <th className="p-4 font-semibold">Solicitud</th>
               <th className="p-4 font-semibold">Estado</th>
               <th className="p-4 font-semibold">Fecha</th>
+              <th className="p-4 font-semibold">Certificado</th>
               <th className="p-4 font-semibold">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {currentData.map((item, idx) => {
+            {currentData.map((item) => {
               const estadoKey = normalizeEstado(item.estado);
+              const isDownloading = downloading[item.id] || false;
 
               return (
                 <tr
-                  key={idx}
+                  key={item.id}
                   className="border-t hover:bg-[#f9f5ff] transition duration-200"
                 >
                   <td className="p-4 text-gray-800 font-medium">
                     {item.Usuario?.nombre || "—"}
                   </td>
                   <td className="p-4">
-                    <Link
-                      href={`/solicitud/${item.id}`}
-                      className="text-[#6e328a] font-medium hover:underline"
+                    <button
+                      onClick={() => handleViewPDF(item.id)}
+                      className="text-[#6e328a] font-medium hover:underline cursor-pointer"
                     >
-                      Ver solicitud
-                    </Link>
+                      Ver certificado
+                    </button>
                   </td>
                   <td className="p-4">
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold shadow-sm ${
                         statusStyle[estadoKey] ||
-                        "border border-gray-300 text-gray-500"
+                        "border border-gray-300 text-gray-100 bg-[#34BC40]"
                       }`}
                     >
-                      <span>{statusIcon[estadoKey] || "📄"}</span>
+                      <span>{statusIcon[estadoKey] || "✅"}</span>
                       {estadoKey}
                     </span>
                   </td>
@@ -125,10 +224,34 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
                   </td>
                   <td className="p-4">
                     <button
-                      onClick={() => router.push(`/finalizar-guia/${item.id}`)}
-                      className="bg-[#6e328a] text-white px-4 py-2 rounded hover:bg-[#8a4fad] transition duration-200"
+                      onClick={() => handleDownloadPDF(item.id)}
+                      className={`flex items-center gap-1 px-3 py-1 rounded text-xs bg-[#6e328a] text-white hover:bg-[#8a4fad] transition duration-200`}
+                      disabled={isDownloading}
                     >
-                      Finalizar Guía
+                      {isDownloading ? (
+                        <>
+                          <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Generando...
+                        </>
+                      ) : (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                          Descargar
+                        </>
+                      )}
+                    </button>
+                  </td>
+                  <td className="p-4">
+                    <button
+                      onClick={() => router.push(`/finalizar-guia/${item.id}`)}
+                      className="bg-[#6e328a] text-white px-3 py-1 rounded text-xs hover:bg-[#8a4fad] transition duration-200"
+                    >
+                      Finalizar
                     </button>
                   </td>
                 </tr>
@@ -137,7 +260,7 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
           </tbody>
         </table>
 
-        {/* Paginación */}
+        {/* Paginación (se mantiene igual) */}
         <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 bg-gray-50 text-xs text-gray-600 rounded-b-2xl">
           <div className="flex items-center gap-2">
             <span>Filas por página:</span>

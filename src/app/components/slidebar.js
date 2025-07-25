@@ -16,21 +16,32 @@ import {
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
   const [pendientesCount, setPendientesCount] = useState(0);
+  const { logout, user, token } = useAuth();
 
   useEffect(() => {
     const fetchPendientesCount = async () => {
       try {
-        const response = await axios.get('https://back-abg.onrender.com/api/movilizaciones/pendientes/count');
+        const response = await axios.get(
+          'https://back-abg.onrender.com/api/movilizaciones/pendientes/count',
+          {
+            headers: {
+              Authorization: `Bearer ${token}` // Incluye el token en el encabezado
+            }
+          }
+        );
         setPendientesCount(response.data.totalPendientes);
       } catch (error) {
         console.error('Error al obtener el conteo de pendientes:', error);
+        // Opcional: manejar el error mostrando un mensaje al usuario
       }
     };
 
-    fetchPendientesCount();
-  }, []);
+    if (token) { // Solo hacer la solicitud si hay token
+      fetchPendientesCount();
+    }
+  }, [token]); // Dependencia del efecto: se ejecuta cuando el token cambia
 
-  const { logout, user } = useAuth();
+  
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -59,13 +70,13 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
 
       <nav className="px-2 space-y-2 mt-4">
         <SidebarLink href="/dashboard" icon={LayoutDashboard} label="Dashboard" isOpen={isOpen} />
-        <SidebarLink
+        {/* <SidebarLink
           href="/dashboard/solicitudes"
           icon={ClipboardList}
           label="Solicitudes"
           isOpen={isOpen}
           badge={pendientesCount}
-        />
+        /> */}
 
         {user?.rol === 'admin' && (
           <SidebarLink href="/usuarios" icon={Users} label="Usuarios" isOpen={isOpen} />

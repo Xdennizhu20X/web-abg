@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
+import { useAuth } from '@/context/AuthContext'; // Importa el contexto de autenticación
 
 const FinalizarGuiaPage = () => {
   const { id } = useParams();
   const router = useRouter();
+  const { token } = useAuth(); // Obtiene el token del contexto
   const [animals, setAnimals] = useState([]);
   const [checkedAnimals, setCheckedAnimals] = useState({});
   const [loading, setLoading] = useState(true);
@@ -16,7 +18,14 @@ const FinalizarGuiaPage = () => {
     const fetchAnimals = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`https://back-abg.onrender.com/api/movilizaciones/${id}/animales`);
+        const response = await axios.get(
+          `https://back-abg.onrender.com/api/movilizaciones/${id}/animales`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}` // Incluye el token en el encabezado
+            }
+          }
+        );
     
         const animalList = response.data.animales;
         setAnimals(animalList);
@@ -29,15 +38,19 @@ const FinalizarGuiaPage = () => {
       } catch (err) {
         setError(err);
         console.error('Error fetching animals:', err);
+        // Manejo de error 401 (no autorizado)
+        if (err.response?.status === 401) {
+          router.push('/login'); // Redirige al login si no está autorizado
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    if (id) {
+    if (id && token) { // Solo ejecutar si hay ID y token
       fetchAnimals();
     }
-  }, [id]);
+  }, [id, token, router]);
 
   const handleCheckboxChange = (animalId) => {
     setCheckedAnimals(prevState => ({
@@ -46,17 +59,67 @@ const FinalizarGuiaPage = () => {
     }));
   };
 
-  const handleAlertABG = () => {
-    // Placeholder for Alertar a la ABG logic
-    alert('Alertar a la ABG button clicked!');
-    // Implement API call or other actions here
-  };
+const handleAlertABG = async () => {
+  try {
+    const response = await axios.put(
+      `https://back-abg.onrender.com/api/movilizaciones/${id}/estado`,
+      { 
+        id: Number(id), // Asegúrate de enviar el ID como número
+        nuevoEstado: 'alerta' 
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    if (response.status === 200) {
+      alert('Movilización marcada como alerta');
+      router.push('/dashboard');
+    }
+  } catch (error) {
+    console.error('Detalles del error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data
+    });
+    alert(`Error al alertar ABG: ${error.response?.data?.message || error.message}`);
+  }
+};
 
-  const handleFinalizar = () => {
-    // Placeholder for Finalizar logic
-    alert('Finalizar button clicked!');
-    // Implement API call or other actions here
-  };
+const handleFinalizar = async () => {
+  try {
+    const response = await axios.put(
+      `https://back-abg.onrender.com/api/movilizaciones/${id}/estado`,
+      { 
+        id: Number(id), // Asegúrate de enviar el ID como número
+        nuevoEstado: 'finalizado' 
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (response.status === 200) {
+      alert('Movilización finalizada correctamente');
+      router.push('/dashboard');
+    }
+  } catch (error) {
+    console.error('Detalles del error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data
+    });
+    alert(`Error al finalizar: ${error.response?.data?.message || error.message}`);
+  }
+};
 
   const allChecked = animals.length > 0 && Object.values(checkedAnimals).every(isChecked => isChecked);
 
@@ -87,7 +150,7 @@ const FinalizarGuiaPage = () => {
         <ul>
           {animals.map(animal => (
             <li key={animal.id} className="flex items-center justify-between border-b border-gray-200 last:border-b-0 py-3 px-2 hover:bg-gray-50 transition-colors duration-200">
-              <span>{`${animal.especie} - ${animal.raza} (ID: ${animal.identificador})`}</span>
+              <span>{`${animal.especie}-(ID: ${animal.identificador})`}</span>
               <input
                 type="checkbox"
                 checked={checkedAnimals[animal.id] || false}
@@ -123,3 +186,4 @@ const FinalizarGuiaPage = () => {
 };
 
 export default FinalizarGuiaPage;
+
