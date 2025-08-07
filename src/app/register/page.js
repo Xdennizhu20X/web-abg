@@ -97,7 +97,7 @@ export default function RegisterPage() {
     {/* Logo institucional */}
     <div className="flex justify-center mb-6">
       <Image
-        src="/logo_abg.png"
+        src="/nuevologo.png"
         alt="Logo ABG"
         width={220}
         height={80}

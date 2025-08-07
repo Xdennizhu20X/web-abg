@@ -141,7 +141,7 @@ export function Diagrama() {
   };
 
   return (
-    <Card className="rounded-2xl border-2 border-black/10">
+    <Card className="rounded-2xl border-2 bg-white border-black/10">
       <CardHeader>
         <CardTitle>{metaData.title}</CardTitle>
         <CardDescription>
@@ -150,7 +150,7 @@ export function Diagrama() {
       </CardHeader>
 
       {/* Input para buscar por Cédula */}
-      <div className="flex items-center gap-2 px-6 pb-4">
+      <div className="flex flex-wrap items-center gap-2 pl-4 pr-3 pb-4">
         <label htmlFor="userId" className="text-sm font-semibold">Buscar por Cédula:</label>
         <input
           id="userId"
@@ -219,8 +219,7 @@ export function Diagrama() {
           <BarChart
             data={chartData}
             margin={{
-              left: 12,
-              right: 12,
+              
             }}
           >
             <CartesianGrid vertical={false} />

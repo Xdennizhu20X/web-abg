@@ -5,6 +5,7 @@ import Sidebar from '@/app/components/slidebar';
 import SectionTable from '@/app/components/SectionTable';
 import { Diagrama } from '@/app/components/diagrama';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
 
 export default function DashboardHome() {
   const [isOpen, setIsOpen] = useState(true);
@@ -40,13 +41,23 @@ export default function DashboardHome() {
           />
         )}
 
-        <main className="p-6 bg-gray-50 h-auto ">
-          <h2 className="text-3xl font-bold text-center text-[#6e328a] mb-2">
-            Bienvenido al Panel{user?.nombre ? `, ${user.nombre}` : ''}
-          </h2>
-          <p className="text-gray-600 text-center mb-6">
-            Este es el panel de gestión de movilización de ganado de ABG.
-          </p>
+        <main className="p-6 bg-gray-50 h-auto mx-5 flex flex-wrap justify-center sm:justify-between items-center  ">
+          <div className="flex items-center justify-start flex-col ">
+          <h2 className="text-3xl font-bold text-start text-[#6e328a] mb-2">
+                      Bienvenido al Panel{user?.nombre ? `, ${user.nombre}` : ''}
+                    </h2>
+                    <p className="text-gray-600   text-start">
+                      Este es el panel de gestión de movilización de ganado de ABG.
+                    </p>
+          </div>
+          
+          <Image
+                  src="/nuevologo.png"
+                  alt="Logo ABG"
+                  width={300}
+                  height={50}
+                  priority
+                />
         </main>
 
         {user.rol === 'admin' && (

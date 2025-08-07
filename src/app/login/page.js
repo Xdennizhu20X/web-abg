@@ -108,7 +108,7 @@ export default function LoginPage() {
   <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm border border-gray-200">
     <div className="flex justify-center mb-6">
       <Image
-        src="/logo_abg.png"
+        src="/nuevologo.png"
         alt="Logo ABG"
         width={200}
         height={80}

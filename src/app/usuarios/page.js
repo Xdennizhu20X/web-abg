@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Edit, Trash2 } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 export default function UsuariosKanban() {
   const [usuarios, setUsuarios] = useState([]);
@@ -8,34 +10,113 @@ export default function UsuariosKanban() {
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-  useEffect(() => {
-    if (!token) return;
-
-    const fetchUsuarios = async () => {
-      try {
-        const res = await fetch('https://back-abg.onrender.com/api/usuarios/admin/usuarios', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await res.json();
-        if (data.success) {
-          setUsuarios(data.data);
-        }
-      } catch (error) {
-        console.error('Error al cargar los usuarios', error);
-      } finally {
-        setLoading(false);
+  const fetchUsuarios = async () => {
+    try {
+      const res = await fetch('https://back-abg.onrender.com/api/usuarios/admin/usuarios', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUsuarios(data.data);
       }
-    };
+    } catch (error) {
+      console.error('Error al cargar los usuarios', error);
+      Swal.fire('Error', 'No se pudieron cargar los usuarios.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchUsuarios();
+  useEffect(() => {
+    if (token) {
+      fetchUsuarios();
+    }
   }, [token]);
+
+  const handleEdit = (usuario) => {
+    Swal.fire({
+      title: `Editar Usuario: ${usuario.nombre}`,
+      html: `
+        <input id="swal-nombre" class="swal2-input" placeholder="Nombre" value="${usuario.nombre}">
+        <input id="swal-email" class="swal2-input" placeholder="Email" value="${usuario.email}">
+        <input id="swal-ci" class="swal2-input" placeholder="CI" value="${usuario.ci}">
+        <input id="swal-telefono" class="swal2-input" placeholder="Teléfono" value="${usuario.telefono || ''}">
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Guardar Cambios',
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const nombre = document.getElementById('swal-nombre').value;
+        const email = document.getElementById('swal-email').value;
+        const ci = document.getElementById('swal-ci').value;
+        const telefono = document.getElementById('swal-telefono').value;
+        return { nombre, email, ci, telefono };
+      },
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await fetch(`https://back-abg.onrender.com/api/usuarios/admin/usuarios/${usuario.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(result.value),
+          });
+          const data = await res.json();
+          if (data.success) {
+            Swal.fire('¡Actualizado!', 'El usuario ha sido actualizado.', 'success');
+            fetchUsuarios(); // Recargar la lista de usuarios
+          } else {
+            Swal.fire('Error', data.message || 'No se pudo actualizar el usuario.', 'error');
+          }
+        } catch (error) {
+          console.error('Error al actualizar el usuario:', error);
+          Swal.fire('Error', 'Ocurrió un error al intentar actualizar.', 'error');
+        }
+      }
+    });
+  };
+
+  const handleDelete = (id) => {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: "¡No podrás revertir esto!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, ¡elimínalo!',
+      cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await fetch(`https://back-abg.onrender.com/api/usuarios/admin/delete/usuarios/${id}`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const data = await res.json();
+          if (data.success) {
+            Swal.fire('¡Eliminado!', 'El usuario ha sido eliminado.', 'success');
+            fetchUsuarios(); // Recargar la lista de usuarios
+          } else {
+            Swal.fire('Error', data.message || 'No se pudo eliminar el usuario.', 'error');
+          }
+        } catch (error) {
+          console.error('Error al eliminar el usuario:', error);
+          Swal.fire('Error', 'Ocurrió un error al intentar eliminar.', 'error');
+        }
+      }
+    });
+  };
 
   const roles = ['admin', 'tecnico', 'ganadero'];
 
-  // Asignación manual de colores para Tailwind (evita uso dinámico incompatible)
   const roleColors = {
     admin: {
       border: 'border-yellow-300',
@@ -71,7 +152,7 @@ export default function UsuariosKanban() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {roles.map((rol) => (
-            <div key={rol} className="bg-white rounded-xl  shadow-md p-4 border-t-4 border-purple-500 mb-6">
+            <div key={rol} className="bg-white rounded-xl shadow-md p-4 border-t-4 border-purple-500 mb-6">
               <h3 className={`text-xl font-bold text-center mb-4 capitalize ${roleColors[rol].text}`}>
                 {rol}s
               </h3>
@@ -94,6 +175,22 @@ export default function UsuariosKanban() {
                       <p className="text-xs text-gray-400 mt-2">
                         🗓 Registrado: {new Date(user.fecha_registro).toLocaleDateString()}
                       </p>
+                      <div className="flex justify-end gap-2 mt-3">
+                        <button
+                          onClick={() => handleEdit(user)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition"
+                          aria-label="Editar usuario"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(user.id)}
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-full transition"
+                          aria-label="Eliminar usuario"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

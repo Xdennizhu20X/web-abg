@@ -82,7 +82,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
           <SidebarLink href="/usuarios" icon={Users} label="Usuarios" isOpen={isOpen} />
         )}
 
-        <SidebarLink href="/configuracion" icon={Settings} label="Configuración" isOpen={isOpen} />
+        <SidebarLink href="/perfil" icon={Settings} label="Configuración" isOpen={isOpen} />
 
         <button
           onClick={handleLogout}
