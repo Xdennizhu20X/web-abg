@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, UserCog } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export default function UsuariosKanban() {
@@ -35,6 +35,43 @@ export default function UsuariosKanban() {
     }
   }, [token]);
 
+  const handleRoleChange = (usuario) => {
+    const newRole = usuario.rol === 'admin' ? 'tecnico' : 'admin';
+    Swal.fire({
+      title: '¿Cambiar Rol?',
+      text: `¿Quieres cambiar el rol de ${usuario.nombre} de ${usuario.rol} a ${newRole}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, ¡cambiar!',
+      cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await fetch(`https://back-abg.onrender.com/api/usuarios/admin/usuarios/${usuario.id}` , {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ rol: newRole }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            Swal.fire('¡Rol Cambiado!', `El rol de ${usuario.nombre} ha sido actualizado.`, 'success');
+            fetchUsuarios(); // Recargar la lista de usuarios
+          } else {
+            Swal.fire('Error', data.message || 'No se pudo cambiar el rol del usuario.', 'error');
+          }
+        } catch (error) {
+          console.error('Error al cambiar el rol del usuario:', error);
+          Swal.fire('Error', 'Ocurrió un error al intentar cambiar el rol.', 'error');
+        }
+      }
+    });
+  };
+
   const handleEdit = (usuario) => {
     Swal.fire({
       title: `Editar Usuario: ${usuario.nombre}`,
@@ -58,7 +95,8 @@ export default function UsuariosKanban() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await fetch(`https://back-abg.onrender.com/api/usuarios/admin/usuarios/${usuario.id}`, {
+          const res = await fetch(`https://back-abg.onrender.com/api/usuarios/admin/usuarios/${usuario.id}`,
+           {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -94,7 +132,8 @@ export default function UsuariosKanban() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await fetch(`https://back-abg.onrender.com/api/usuarios/admin/delete/usuarios/${id}`, {
+          const res = await fetch(`https://back-abg.onrender.com/api/usuarios/admin/delete/usuarios/${id}`,
+           {
             method: 'POST',
             headers: {
               Authorization: `Bearer ${token}`,
@@ -176,6 +215,15 @@ export default function UsuariosKanban() {
                         🗓 Registrado: {new Date(user.fecha_registro).toLocaleDateString()}
                       </p>
                       <div className="flex justify-end gap-2 mt-3">
+                        {['admin', 'tecnico'].includes(user.rol) && (
+                          <button
+                            onClick={() => handleRoleChange(user)}
+                            className="p-2 text-green-600 hover:bg-green-100 rounded-full transition"
+                            aria-label="Cambiar rol"
+                          >
+                            <UserCog size={18} />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleEdit(user)}
                           className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition"

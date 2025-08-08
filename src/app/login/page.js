@@ -110,8 +110,8 @@ export default function LoginPage() {
       <Image
         src="/nuevologo.png"
         alt="Logo ABG"
-        width={200}
-        height={80}
+        width={400}
+        height={100}
         priority
       />
     </div>
