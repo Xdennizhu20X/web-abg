@@ -178,6 +178,10 @@ export function Diagrama() {
     window.open(url, '_blank');
   };
 
+  const hasData = chartData.length > 0 && chartData.some(
+    (item) => item.totalMovilizaciones > 0 || item.totalAnimales > 0 || item.totalAves > 0
+  );
+
   return (
     <Card className="rounded-2xl border-2 bg-white border-black/10">
       <CardHeader>
@@ -280,11 +284,7 @@ export function Diagrama() {
           <div className="flex items-center justify-center h-full">Cargando...</div>
         ) : error ? (
           <div className="flex items-center justify-center h-full text-red-500">{error}</div>
-        ) : chartData.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            {userId ? "No se encontraron movilizaciones para los filtros seleccionados." : "No hay datos globales disponibles."}
-          </div>
-        ) : (
+        ) : hasData ? (
           <ChartContainer config={chartConfig} className="sm:h-82 sm:w-full">
             <BarChart data={chartData}>
               <CartesianGrid vertical={false} />
@@ -310,6 +310,12 @@ export function Diagrama() {
               <Bar dataKey="totalAves" fill="var(--color-totalAves)" radius={4} />
             </BarChart>
           </ChartContainer>
+        ) : (
+          <div className="flex items-center justify-center h-full p-4 border-2 border-dashed border-red-400 rounded-lg bg-red-50">
+            <p className="text-red-700 font-semibold">
+              {userId ? "No se encontraron movilizaciones para los filtros seleccionados." : "No hay datos globales disponibles."}
+            </p>
+          </div>
         )}
       </CardContent>
 
