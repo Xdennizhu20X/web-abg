@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { TrendingUp } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import {
@@ -17,78 +17,17 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
-// Datos por meses del año (Año)
-const dataAno = [
-  { label: "Ene", solicitudes: 1200, animalesAves: 500, movilizaciones: 700, fechaInicio: "2023-01-01", fechaFin: "2023-01-31" },
-  { label: "Feb", solicitudes: 1400, animalesAves: 600, movilizaciones: 800, fechaInicio: "2023-02-01", fechaFin: "2023-02-28" },
-  { label: "Mar", solicitudes: 1100, animalesAves: 450, movilizaciones: 650, fechaInicio: "2023-03-01", fechaFin: "2023-03-31" },
-  { label: "Abr", solicitudes: 1300, animalesAves: 550, movilizaciones: 750, fechaInicio: "2023-04-01", fechaFin: "2023-04-30" },
-  { label: "May", solicitudes: 1500, animalesAves: 650, movilizaciones: 850, fechaInicio: "2023-05-01", fechaFin: "2023-05-31" },
-  { label: "Jun", solicitudes: 1700, animalesAves: 700, movilizaciones: 1000, fechaInicio: "2023-06-01", fechaFin: "2023-06-30" },
-  { label: "Jul", solicitudes: 1600, animalesAves: 680, movilizaciones: 920, fechaInicio: "2023-07-01", fechaFin: "2023-07-31" },
-  { label: "Ago", solicitudes: 1800, animalesAves: 750, movilizaciones: 1050, fechaInicio: "2023-08-01", fechaFin: "2023-08-31" },
-  { label: "Sep", solicitudes: 1400, animalesAves: 580, movilizaciones: 820, fechaInicio: "2023-09-01", fechaFin: "2023-09-30" },
-  { label: "Oct", solicitudes: 1300, animalesAves: 520, movilizaciones: 780, fechaInicio: "2023-10-01", fechaFin: "2023-10-31" },
-  { label: "Nov", solicitudes: 1500, animalesAves: 630, movilizaciones: 870, fechaInicio: "2023-11-01", fechaFin: "2023-11-30" },
-  { label: "Dic", solicitudes: 1900, animalesAves: 800, movilizaciones: 1100, fechaInicio: "2023-12-01", fechaFin: "2023-12-31" },
-]
-
-// Datos por mes específico
-const dataMesEspecifico = (year, month) => {
-  const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const data = [];
-  
-  for (let day = 1; day <= daysInMonth; day++) {
-    data.push({
-      label: `${day}`,
-      solicitudes: Math.floor(Math.random() * 100) + 50,
-      animalesAves: Math.floor(Math.random() * 40) + 20,
-      movilizaciones: Math.floor(Math.random() * 60) + 30,
-      fecha: `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    });
-  }
-  
-  return {
-    monthName: monthNames[month],
-    year: year,
-    data: data
-  };
-};
-
-// Datos por año específico
-const dataAnoEspecifico = (year) => {
-  const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-  const data = [];
-  
-  for (let month = 0; month < 12; month++) {
-    data.push({
-      label: monthNames[month],
-      solicitudes: Math.floor(Math.random() * 1000) + 1000,
-      animalesAves: Math.floor(Math.random() * 400) + 200,
-      movilizaciones: Math.floor(Math.random() * 600) + 300,
-      fechaInicio: `${year}-${String(month + 1).padStart(2, '0')}-01`,
-      fechaFin: `${year}-${String(month + 1).padStart(2, '0')}-${new Date(year, month + 1, 0).getDate()}`
-    });
-  }
-  
-  return {
-    year: year,
-    data: data
-  };
-};
-
 const chartConfig = {
-  solicitudes: {
-    label: "Solicitudes",
+  totalMovilizaciones: {
+    label: "Movilizaciones",
     color: "#6e328a",
   },
-  animalesAves: {
-    label: "Animales y Aves",
+  totalAnimales: {
+    label: "Animales",
     color: "#FF5733",
   },
-  movilizaciones: {
-    label: "Movilizaciones",
+  totalAves: {
+    label: "Aves",
     color: "#33FF57",
   },
 }
@@ -98,38 +37,102 @@ export function Diagrama() {
   const [userId, setUserId] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [dateRange, setDateRange] = useState('');
+  const [chartData, setChartData] = useState([]);
+  const [metaData, setMetaData] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Obtener datos según filtro
-  let chartData;
-  let metaData = {};
-  
-  if (filter === "mesEspecifico") {
-    const result = dataMesEspecifico(selectedYear, selectedMonth);
-    chartData = result.data;
-    metaData = {
-      title: `Datos de ${result.monthName} ${result.year}`,
-      description: `Del ${chartData[0].fecha} al ${chartData[chartData.length - 1].fecha}`,
-      dateRange: `${chartData[0].fecha} - ${chartData[chartData.length - 1].fecha}`
-    };
-  } else if (filter === "anoEspecifico") {
-    const result = dataAnoEspecifico(selectedYear);
-    chartData = result.data;
-    metaData = {
-      title: `Datos del año ${result.year}`,
-      description: `Del ${chartData[0].fechaInicio} al ${chartData[chartData.length - 1].fechaFin}`,
-      dateRange: `${chartData[0].fechaInicio} - ${chartData[chartData.length - 1].fechaFin}`
-    };
-  } else {
-    chartData = dataAno;
-    metaData = {
-      title: "Datos del año actual por meses",
-      description: `Del ${dataAno[0].fechaInicio} al ${dataAno[dataAno.length - 1].fechaFin}`,
-      dateRange: `${dataAno[0].fechaInicio} - ${dataAno[dataAno.length - 1].fechaFin}`
-    };
-  }
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
 
-  // Manejar el cambio de mes y año
+      if (!userId) {
+        // --- Lógica para datos globales ---
+        try {
+          const response = await fetch(`/api/reportes/datos-grafico-global`);
+          const result = await response.json();
+          if (result.success) {
+            const data = result.data;
+            const formattedData = [{
+              label: "Totales Globales",
+              totalMovilizaciones: data.totalMovilizaciones,
+              totalAnimales: data.totalAnimales,
+              totalAves: data.totalAves,
+            }];
+            setChartData(formattedData);
+            setMetaData({
+              title: "Estadísticas Globales de Movilización",
+              description: "Datos agregados de todas las movilizaciones."
+            });
+          } else {
+            setError(result.message);
+            setChartData([]);
+            setMetaData({ title: "Error", description: result.message });
+          }
+        } catch (err) {
+          setError("Error de conexión al obtener los datos globales.");
+          setChartData([]);
+          setMetaData({ title: "Error", description: "No se pudo conectar al servidor." });
+        } finally {
+          setLoading(false);
+        }
+        return; // Termina la ejecución para no pasar a la lógica de usuario
+      }
+
+      // --- Lógica para datos por cédula ---
+      let fechaDesde, fechaHasta;
+
+      if (filter === "mesEspecifico") {
+        fechaDesde = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-01`;
+        const lastDay = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+        fechaHasta = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      } else if (filter === "anoEspecifico" || filter === "año") {
+        const year = filter === "año" ? new Date().getFullYear() : selectedYear;
+        fechaDesde = `${year}-01-01`;
+        fechaHasta = `${year}-12-31`;
+      }
+
+      try {
+        const params = new URLSearchParams({
+          cedula: userId,
+          fechaDesde,
+          fechaHasta,
+        });
+        const response = await fetch(`/api/reportes/datos-grafico?${params}`);
+        const result = await response.json();
+
+        if (result.success) {
+          const data = result.data;
+          const formattedData = [{
+            label: "Totales",
+            totalMovilizaciones: data.totalMovilizaciones,
+            totalAnimales: data.totalAnimales,
+            totalAves: data.totalAves,
+          }];
+          setChartData(formattedData);
+          setMetaData({
+            title: `Datos para Cédula: ${userId}`,
+            description: `Resultados del ${fechaDesde} al ${fechaHasta}`,
+            dateRange: `${fechaDesde} - ${fechaHasta}`
+          });
+        } else {
+          setError(result.message);
+          setChartData([]);
+          setMetaData({ title: "Error", description: result.message });
+        }
+      } catch (err) {
+        setError("Error de conexión al obtener los datos.");
+        setChartData([]);
+        setMetaData({ title: "Error", description: "No se pudo conectar al servidor." });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [userId, filter, selectedMonth, selectedYear]);
+
   const handleMonthChange = (event) => {
     setSelectedMonth(parseInt(event.target.value, 10));
     setFilter("mesEspecifico");
@@ -139,17 +142,63 @@ export function Diagrama() {
     setSelectedYear(parseInt(event.target.value, 10));
     setFilter("anoEspecifico");
   };
+  
+  const handleSearch = () => {
+      // La búsqueda se activa con el useEffect al cambiar userId
+      console.log("Buscando...");
+  }
+
+  const handleDownloadGlobalReport = () => {
+    const params = new URLSearchParams({
+      año: selectedYear,
+    });
+    const url = `https://back-abg.onrender.com/api/reportes/movilizaciones?${params}`;
+    window.open(url, '_blank');
+  };
+
+  const handleDownloadUserReport = () => {
+    if (!userId) return;
+
+    let fechaDesde, fechaHasta;
+    if (filter === "mesEspecifico") {
+      fechaDesde = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-01`;
+      const lastDay = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+      fechaHasta = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    } else if (filter === "anoEspecifico" || filter === "año") {
+      const year = filter === "año" ? new Date().getFullYear() : selectedYear;
+      fechaDesde = `${year}-01-01`;
+      fechaHasta = `${year}-12-31`;
+    }
+
+    const params = new URLSearchParams();
+    if (fechaDesde) params.append('fechaDesde', fechaDesde);
+    if (fechaHasta) params.append('fechaHasta', fechaHasta);
+
+    const url = `https://back-abg.onrender.com/api/reportes/usuario/${userId}?${params}`;
+    window.open(url, '_blank');
+  };
 
   return (
     <Card className="rounded-2xl border-2 bg-white border-black/10">
       <CardHeader>
-        <CardTitle>{metaData.title}</CardTitle>
-        <CardDescription>
-          {metaData.description}
-        </CardDescription>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle>{metaData.title || "Estadísticas de Movilización"}</CardTitle>
+            {metaData.description && <CardDescription>{metaData.description}</CardDescription>}
+          </div>
+          <div className="flex gap-2">
+            <button onClick={handleDownloadGlobalReport} className="rounded-md px-3 py-1 text-sm font-semibold bg-green-600 text-white">
+              Reporte Global
+            </button>
+            {userId && (
+              <button onClick={handleDownloadUserReport} className="rounded-md px-3 py-1 text-sm font-semibold bg-blue-600 text-white">
+                Reporte Usuario
+              </button>
+            )}
+          </div>
+        </div>
       </CardHeader>
 
-      {/* Input para buscar por Cédula */}
       <div className="flex flex-wrap items-center gap-2 pl-4 pr-3 pb-4">
         <label htmlFor="userId" className="text-sm font-semibold">Buscar por Cédula:</label>
         <input
@@ -160,116 +209,121 @@ export function Diagrama() {
           className="border px-2 py-1 rounded-md"
           placeholder="Ej: 1234567890"
         />
-      </div>
-
-      {/* Filtros */}
-      <div className="flex gap-2 px-6 pb-4 flex-wrap">
-        {/* Botones de filtro */}
-        <button
-          onClick={() => setFilter("año")}
-          className={`rounded-md px-3 py-1 text-sm font-semibold ${
-            filter === "año" ? "bg-purple-600 text-white" : "bg-gray-200"
-          }`}
-        >
-          Año Actual
+        <button onClick={handleSearch} className="rounded-md px-3 py-1 text-sm font-semibold bg-purple-600 text-white">
+            Buscar
         </button>
-
-        {/* Filtro por Mes */}
-        <div className="flex gap-2">
-          <select 
-            value={selectedMonth} 
-            onChange={handleMonthChange} 
-            className="border px-2 py-1 rounded-md text-sm font-semibold"
-          >
-            {[...Array(12).keys()].map((month) => (
-              <option key={month} value={month}>
-                {new Date(0, month).toLocaleString('es', { month: 'long' })}
-              </option>
-            ))}
-          </select>
-
-          <select 
-            value={selectedYear} 
-            onChange={handleYearChange} 
-            className="border px-2 py-1 rounded-md text-sm font-semibold"
-          >
-            {[...Array(5)].map((_, i) => {
-              const year = new Date().getFullYear() - i;
-              return (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              );
-            })}
-          </select>
-        </div>
       </div>
 
-      {/* Rango de fechas */}
-      {metaData.dateRange && (
-        <div className="px-6 pb-2">
-          <p className="text-sm text-gray-600">
-            <strong>Rango de fechas:</strong> {metaData.dateRange}
-          </p>
-        </div>
+      {userId && (
+        <>
+          <div className="flex gap-2 px-6 pb-4 flex-wrap">
+            <button
+              onClick={() => setFilter("año")}
+              className={`rounded-md px-3 py-1 text-sm font-semibold ${
+                filter === "año" ? "bg-purple-600 text-white" : "bg-gray-200"
+              }`}
+            >
+              Año Actual
+            </button>
+
+            <button
+              onClick={() => setFilter("anoEspecifico")}
+              className={`rounded-md px-3 py-1 text-sm font-semibold ${
+                filter === "anoEspecifico" ? "bg-purple-600 text-white" : "bg-gray-200"
+              }`}
+            >
+              Todo el Año
+            </button>
+
+            <div className="flex gap-2">
+              <select 
+                value={selectedMonth} 
+                onChange={handleMonthChange} 
+                className="border px-2 py-1 rounded-md text-sm font-semibold"
+              >
+                {[...Array(12).keys()].map((month) => (
+                  <option key={month} value={month}>
+                    {new Date(0, month).toLocaleString('es', { month: 'long' })}
+                  </option>
+                ))}
+              </select>
+
+              <select 
+                value={selectedYear} 
+                onChange={handleYearChange} 
+                className="border px-2 py-1 rounded-md text-sm font-semibold"
+              >
+                {[...Array(5)].map((_, i) => {
+                  const year = new Date().getFullYear() - i;
+                  return (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          </div>
+
+          {metaData.dateRange && (
+            <div className="px-6 pb-2">
+              <p className="text-sm text-gray-600">
+                <strong>Rango de fechas:</strong> {metaData.dateRange}
+              </p>
+            </div>
+          )}
+        </>
       )}
 
       <CardContent className="sm:h-82">
-        <ChartContainer config={chartConfig} className="sm:h-82 sm:w-full">
-          <BarChart
-            data={chartData}
-            margin={{
-              
-            }}
-          >
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="label"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              stroke="hsl(var(--chart-foreground))"
-            />
-            <YAxis
-              stroke="hsl(var(--chart-foreground))"
-              position="insideLeft"
-              angle={-90}
-              style={{ textAnchor: 'middle' }}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="dashed" />} 
-            />
-            <Bar
-              dataKey="solicitudes"
-              fill="#6e328a"
-              radius={4}
-            />
-            <Bar
-              dataKey="animalesAves"
-              fill="var(--color-animalesAves)"
-              radius={4}
-            />
-            <Bar 
-              dataKey="movilizaciones" 
-              fill="var(--color-movilizaciones)" 
-              radius={4} 
-            />
-          </BarChart>
-        </ChartContainer>
+        {loading ? (
+          <div className="flex items-center justify-center h-full">Cargando...</div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-full text-red-500">{error}</div>
+        ) : chartData.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            {userId ? "No se encontraron movilizaciones para los filtros seleccionados." : "No hay datos globales disponibles."}
+          </div>
+        ) : (
+          <ChartContainer config={chartConfig} className="sm:h-82 sm:w-full">
+            <BarChart data={chartData}>
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="label"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                stroke="hsl(var(--chart-foreground))"
+              />
+              <YAxis
+                stroke="hsl(var(--chart-foreground))"
+                position="insideLeft"
+                angle={-90}
+                style={{ textAnchor: 'middle' }}
+              />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent indicator="dashed" />} 
+              />
+              <Bar dataKey="totalMovilizaciones" fill="var(--color-totalMovilizaciones)" radius={4} />
+              <Bar dataKey="totalAnimales" fill="var(--color-totalAnimales)" radius={4} />
+              <Bar dataKey="totalAves" fill="var(--color-totalAves)" radius={4} />
+            </BarChart>
+          </ChartContainer>
+        )}
       </CardContent>
 
       <CardFooter>
         <div className="flex w-full items-start gap-2 text-sm">
           <div className="grid gap-2">
             <div className="flex items-center gap-2 font-medium leading-none">
-              Trending up by 5.2% this month{" "}
+              Datos actualizados en tiempo real
               <TrendingUp className="h-4 w-4" />
             </div>
             <div className="flex items-center gap-2 leading-none text-muted-foreground">
               {filter === "mesEspecifico"
-                ? `Mes específico: ${new Date(0, selectedMonth).toLocaleString('es', { month: 'long' })} ${selectedYear}`
-                : `Año específico: ${selectedYear}`}
+                ? `Mes: ${new Date(0, selectedMonth).toLocaleString('es', { month: 'long' })} ${selectedYear}`
+                : `Año: ${selectedYear}`}
             </div>
           </div>
         </div>
