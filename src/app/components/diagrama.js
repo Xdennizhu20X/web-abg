@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { TrendingUp } from "lucide-react"
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Cell } from "recharts"
 import {
   Card,
   CardContent,
@@ -54,12 +54,11 @@ export function Diagrama() {
           const result = await response.json();
           if (result.success) {
             const data = result.data;
-            const formattedData = [{
-              label: "Totales Globales",
-              totalMovilizaciones: data.totalMovilizaciones,
-              totalAnimales: data.totalAnimales,
-              totalAves: data.totalAves,
-            }];
+            const formattedData = [
+              { name: "Movilizaciones", total: data.totalMovilizaciones },
+              { name: "Animales", total: data.totalAnimales },
+              { name: "Aves", total: data.totalAves },
+            ];
             setChartData(formattedData);
             setMetaData({
               title: "Estadísticas Globales de Movilización",
@@ -104,12 +103,11 @@ export function Diagrama() {
 
         if (result.success) {
           const data = result.data;
-          const formattedData = [{
-            label: "Totales",
-            totalMovilizaciones: data.totalMovilizaciones,
-            totalAnimales: data.totalAnimales,
-            totalAves: data.totalAves,
-          }];
+          const formattedData = [
+            { name: "Movilizaciones", total: data.totalMovilizaciones },
+            { name: "Animales", total: data.totalAnimales },
+            { name: "Aves", total: data.totalAves },
+          ];
           setChartData(formattedData);
           setMetaData({
             title: `Datos para Cédula: ${userId}`,
@@ -178,9 +176,7 @@ export function Diagrama() {
     window.open(url, '_blank');
   };
 
-  const hasData = chartData.length > 0 && chartData.some(
-    (item) => item.totalMovilizaciones > 0 || item.totalAnimales > 0 || item.totalAves > 0
-  );
+  const hasData = chartData.length > 0 && chartData.some((item) => item.total > 0);
 
   return (
     <Card className="rounded-2xl border-2 bg-white border-black/10">
@@ -289,7 +285,7 @@ export function Diagrama() {
             <BarChart data={chartData}>
               <CartesianGrid vertical={false} />
               <XAxis
-                dataKey="label"
+                dataKey="name"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
@@ -297,17 +293,16 @@ export function Diagrama() {
               />
               <YAxis
                 stroke="hsl(var(--chart-foreground))"
-                position="insideLeft"
-                angle={-90}
-                style={{ textAnchor: 'middle' }}
               />
               <ChartTooltip
                 cursor={false}
                 content={<ChartTooltipContent indicator="dashed" />} 
               />
-              <Bar dataKey="totalMovilizaciones" fill="var(--color-totalMovilizaciones)" radius={4} />
-              <Bar dataKey="totalAnimales" fill="var(--color-totalAnimales)" radius={4} />
-              <Bar dataKey="totalAves" fill="var(--color-totalAves)" radius={4} />
+              <Bar dataKey="total" radius={4}>
+                <Cell fill="var(--color-totalMovilizaciones)" />
+                <Cell fill="var(--color-totalAnimales)" />
+                <Cell fill="var(--color-totalAves)" />
+              </Bar>
             </BarChart>
           </ChartContainer>
         ) : (
