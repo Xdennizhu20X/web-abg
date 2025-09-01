@@ -107,7 +107,7 @@ export default function RegisterPage() {
 
         <div className="w-full text-center">
           <h1 className="text-2xl font-bold text-[#6e328a] mb-4 tracking-tight">
-            Registro de Técnico
+            Registro de Usuario
           </h1>
         </div>
 
@@ -180,13 +180,26 @@ export default function RegisterPage() {
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Rol</label>
+            <select
+              value={form.rol}
+              onChange={(e) => setForm({ ...form, rol: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6e328a]/60 focus:outline-none transition"
+              required
+            >
+              <option value="tecnico">Técnico</option>
+              <option value="faenador">Faenador</option>
+            </select>
+          </div>
+
           <button
             type="submit"
             disabled={isLoading}
             className={`w-full bg-[#6e328a] hover:bg-[#58266f] text-white font-semibold py-2 rounded-lg transition-all ${isLoading ? 'opacity-70 cursor-not-allowed' : ''
               }`}
           >
-            {isLoading ? 'Registrando...' : 'Registrarse como Técnico'}
+            {isLoading ? 'Registrando...' : `Registrarse como ${form.rol.charAt(0).toUpperCase() + form.rol.slice(1)}`}
           </button>
         </form>
 

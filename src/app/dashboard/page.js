@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '@/app/components/slidebar';
 import SectionTable from '@/app/components/SectionTable';
+import CardsMovilizaciones from '@/app/components/CardsMovilizaciones';
 import { Diagrama } from '@/app/components/diagrama';
 import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
@@ -73,7 +74,7 @@ export default function DashboardHome() {
 
         <div className="w-full px-4 pt-4 pb-8">
           <div className="bg-white border border-gray-200 rounded-xl shadow p-4">
-            <SectionTable />
+            {user.rol === 'faenador' ? <CardsMovilizaciones /> : <SectionTable />}
           </div>
         </div>
       </div>

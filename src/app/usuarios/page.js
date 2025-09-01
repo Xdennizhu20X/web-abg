@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Edit, Trash2, UserCog } from 'lucide-react';
+import { Edit, Trash2, UserCog, Check, X } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export default function UsuariosKanban() {
   const [usuarios, setUsuarios] = useState([]);
+  const [pendingUsers, setPendingUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -19,7 +20,8 @@ export default function UsuariosKanban() {
       });
       const data = await res.json();
       if (data.success) {
-        setUsuarios(data.data);
+        setUsuarios(data.data.filter(u => u.estado !== 'pendiente'));
+        setPendingUsers(data.data.filter(u => u.estado === 'pendiente'));
       }
     } catch (error) {
       console.error('Error al cargar los usuarios', error);
@@ -34,6 +36,48 @@ export default function UsuariosKanban() {
       fetchUsuarios();
     }
   }, [token]);
+
+  const handleApprove = async (id) => {
+    try {
+      const res = await fetch(`https://back-abg.onrender.com/api/usuarios/admin/usuarios/${id}/aprobar`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        Swal.fire('¡Aprobado!', 'El usuario ha sido aprobado.', 'success');
+        fetchUsuarios(); // Recargar la lista de usuarios
+      } else {
+        Swal.fire('Error', data.message || 'No se pudo aprobar el usuario.', 'error');
+      }
+    } catch (error) {
+      console.error('Error al aprobar el usuario:', error);
+      Swal.fire('Error', 'Ocurrió un error al intentar aprobar.', 'error');
+    }
+  };
+
+  const handleReject = async (id) => {
+    try {
+      const res = await fetch(`https://back-abg.onrender.com/api/usuarios/admin/usuarios/${id}/rechazar`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        Swal.fire('¡Rechazado!', 'El usuario ha sido rechazado.', 'success');
+        fetchUsuarios(); // Recargar la lista de usuarios
+      } else {
+        Swal.fire('Error', data.message || 'No se pudo rechazar el usuario.', 'error');
+      }
+    } catch (error) {
+      console.error('Error al rechazar el usuario:', error);
+      Swal.fire('Error', 'Ocurrió un error al intentar rechazar.', 'error');
+    }
+  };
 
   const handleRoleChange = (usuario) => {
     const newRole = usuario.rol === 'admin' ? 'tecnico' : 'admin';
@@ -154,7 +198,7 @@ export default function UsuariosKanban() {
     });
   };
 
-  const roles = ['admin', 'tecnico', 'ganadero'];
+  const roles = ['admin', 'tecnico', 'ganadero', 'faenador'];
 
   const roleColors = {
     admin: {
@@ -175,6 +219,12 @@ export default function UsuariosKanban() {
       hover: 'hover:bg-red-100',
       bg: 'bg-red-50',
     },
+    faenador: {
+      border: 'border-green-500',
+      text: 'text-green-600',
+      hover: 'hover:bg-green-100',
+      bg: 'bg-green-50',
+    },
   };
 
   const groupedUsers = roles.reduce((acc, rol) => {
@@ -190,6 +240,50 @@ export default function UsuariosKanban() {
         <p className="text-gray-600">Cargando usuarios...</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div key="pendiente" className="bg-white rounded-xl shadow-md p-4 border-t-4 border-gray-500 mb-6">
+              <h3 className={`text-xl font-bold text-center mb-4 capitalize text-gray-600`}>
+                Usuarios Pendientes
+              </h3>
+              {pendingUsers.length === 0 ? (
+                <p className="text-gray-500 text-sm text-center">Sin usuarios pendientes</p>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {pendingUsers.map((user) => (
+                    <div
+                      key={user.id}
+                      className={`
+                        border-l-4 p-4 rounded-r-xl shadow-sm transition
+                        border-gray-500 hover:bg-gray-100 bg-gray-50
+                      `}
+                    >
+                      <h4 className="font-semibold text-gray-800 text-lg">{user.nombre}</h4>
+                      <p className="text-sm text-gray-600">📧 {user.email}</p>
+                      <p className="text-sm text-gray-600">🪪 CI: {user.ci}</p>
+                      <p className="text-sm text-gray-600">📞 Tel: {user.telefono || 'No disponible'}</p>
+                      <p className="text-xs text-gray-400 mt-2">
+                        🗓 Registrado: {new Date(user.fecha_registro).toLocaleDateString()}
+                      </p>
+                      <div className="flex justify-end gap-2 mt-3">
+                        <button
+                          onClick={() => handleApprove(user.id)}
+                          className="p-2 text-green-600 hover:bg-green-100 rounded-full transition"
+                          aria-label="Aprobar usuario"
+                        >
+                          <Check size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleReject(user.id)}
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-full transition"
+                          aria-label="Rechazar usuario"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           {roles.map((rol) => (
             <div key={rol} className="bg-white rounded-xl shadow-md p-4 border-t-4 border-purple-500 mb-6">
               <h3 className={`text-xl font-bold text-center mb-4 capitalize ${roleColors[rol].text}`}>

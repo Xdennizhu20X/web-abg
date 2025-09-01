@@ -46,18 +46,12 @@ export const loginUser = async (credentials) => {
 
 
 export const registerUser = async (userData) => {
-  // Forzamos el rol de 'tecnico' para todos los registros desde este formulario
-  const dataToSend = {
-    ...userData,
-    rol: 'tecnico' // Aquí establecemos el rol fijo
-  };
-
   const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(dataToSend),
+    body: JSON.stringify(userData),
   });
 
   if (!response.ok) {

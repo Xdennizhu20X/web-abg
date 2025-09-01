@@ -57,7 +57,7 @@ export default function LoginPage() {
         confirmButtonColor: '#E10600',
       });
       return;
-    } else if (role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'tecnico') {
+    } else if (role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'tecnico' || role?.toLowerCase() === 'faenador') {
       // Alerta de espera antes de redirigir
       await Swal.fire({
         title: 'Redirigiendo...',
