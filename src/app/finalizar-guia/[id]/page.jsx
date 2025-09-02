@@ -19,7 +19,7 @@ const FinalizarGuiaPage = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `https://back-abg.onrender.com/api/movilizaciones/${id}/animales`,
+          `http://51.178.31.63:3000/api/movilizaciones/${id}/animales`,
           {
             headers: {
               Authorization: `Bearer ${token}` // Incluye el token en el encabezado
@@ -62,7 +62,7 @@ const FinalizarGuiaPage = () => {
 const handleAlertABG = async () => {
   try {
     const response = await axios.put(
-      `https://back-abg.onrender.com/api/movilizaciones/${id}/estado`,
+      `http://51.178.31.63:3000/api/movilizaciones/${id}/estado`,
       { 
         id: Number(id), // Asegúrate de enviar el ID como número
         nuevoEstado: 'alerta' 
@@ -93,7 +93,7 @@ const handleAlertABG = async () => {
 const handleFinalizar = async () => {
   try {
     const response = await axios.put(
-      `https://back-abg.onrender.com/api/movilizaciones/${id}/estado`,
+      `http://51.178.31.63:3000/api/movilizaciones/${id}/estado`,
       { 
         id: Number(id), // Asegúrate de enviar el ID como número
         nuevoEstado: 'finalizado' 

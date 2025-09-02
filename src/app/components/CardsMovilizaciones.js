@@ -16,7 +16,7 @@ export default function CardsMovilizaciones({ data: propData, loading: propLoadi
         try {
           setLoading(true);
           const token = localStorage.getItem("token");
-          const res = await axios.get("https://back-abg.onrender.com/api/movilizaciones", {
+          const res = await axios.get("http://51.178.31.63:3000/api/movilizaciones", {
             headers: { Authorization: `Bearer ${token}` },
           });
           setLocalData(res.data);
@@ -39,7 +39,7 @@ export default function CardsMovilizaciones({ data: propData, loading: propLoadi
       const token = localStorage.getItem("token");
       
       const response = await fetch(
-        `https://back-abg.onrender.com/api/movilizaciones/${id}/certificado`,
+        `http://51.178.31.63:3000/api/movilizaciones/${id}/certificado`,
         {
           headers: { Authorization: `Bearer ${token}` },
           method: 'GET'

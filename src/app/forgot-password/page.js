@@ -12,7 +12,7 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
-      const res = await fetch('https://back-abg.onrender.com/api/auth/forgot-password', {
+      const res = await fetch('http://51.178.31.63:3000/api/auth/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
