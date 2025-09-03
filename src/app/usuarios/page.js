@@ -13,7 +13,7 @@ export default function UsuariosKanban() {
 
   const fetchUsuarios = async () => {
     try {
-      const res = await fetch('http://51.178.31.63:3000/api/usuarios/admin/usuarios', {
+      const res = await fetch('https://51.178.31.63:3000/api/usuarios/admin/usuarios', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -39,7 +39,7 @@ export default function UsuariosKanban() {
 
   const handleApprove = async (id) => {
     try {
-      const res = await fetch(`http://51.178.31.63:3000/api/usuarios/admin/usuarios/${id}/aprobar`, {
+      const res = await fetch(`https://51.178.31.63:3000/api/usuarios/admin/usuarios/${id}/aprobar`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -60,7 +60,7 @@ export default function UsuariosKanban() {
 
   const handleReject = async (id) => {
     try {
-      const res = await fetch(`http://51.178.31.63:3000/api/usuarios/admin/usuarios/${id}/rechazar`, {
+      const res = await fetch(`https://51.178.31.63:3000/api/usuarios/admin/usuarios/${id}/rechazar`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
