@@ -21,7 +21,7 @@ export default function CertificadoZoosanitario() {
     const fetchSolicitud = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`https://51.178.31.63:3000/api/movilizaciones/${id}`, {
+        const res = await axios.get(`http://51.178.31.63:3000/api/movilizaciones/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSolicitud(res.data);
@@ -36,7 +36,7 @@ export default function CertificadoZoosanitario() {
 
 const handleDescargarPDFServidor = () => {
   const link = document.createElement('a');
-  link.href = `https://51.178.31.63:3000/api/pdf/${solicitud.id}`;
+  link.href = `http://51.178.31.63:3000/api/pdf/${solicitud.id}`;
   link.download = `certificado-${solicitud.id}.pdf`;
   link.target = '_blank'; // abre en otra pestaña, opcional
   link.click();

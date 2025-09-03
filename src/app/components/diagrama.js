@@ -150,7 +150,7 @@ export function Diagrama() {
     const params = new URLSearchParams({
       año: selectedYear,
     });
-    const url = `https://51.178.31.63:3000/api/reportes/movilizaciones?${params}`;
+    const url = `http://51.178.31.63:3000/api/reportes/movilizaciones?${params}`;
     window.open(url, '_blank');
   };
 
@@ -172,7 +172,7 @@ export function Diagrama() {
     if (fechaDesde) params.append('fechaDesde', fechaDesde);
     if (fechaHasta) params.append('fechaHasta', fechaHasta);
 
-    const url = `https://51.178.31.63:3000/api/reportes/usuario/${userId}?${params}`;
+    const url = `http://51.178.31.63:3000/api/reportes/usuario/${userId}?${params}`;
     window.open(url, '_blank');
   };
 

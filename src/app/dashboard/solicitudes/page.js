@@ -32,7 +32,7 @@ const fetchData = async (params = {}) => {
         : '';
       
       // Asegúrate de incluir el parámetro para traer la relación con el técnico
-      const url = `https://51.178.31.63:3000/api/movilizaciones/filtrar${queryParams}`;
+      const url = `http://51.178.31.63:3000/api/movilizaciones/filtrar${queryParams}`;
       console.log("URL completa de la solicitud:", url);
       
       const res = await axios.get(url, {

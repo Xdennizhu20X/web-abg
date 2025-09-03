@@ -1,5 +1,5 @@
 // lib/api.js
-const API_BASE_URL = "https://51.178.31.63:3000/api";
+const API_BASE_URL = "http://51.178.31.63:3000/api";
 
 export const loginUser = async (credentials) => {
   console.log("Enviando credenciales:", credentials);

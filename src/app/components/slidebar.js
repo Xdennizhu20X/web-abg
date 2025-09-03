@@ -22,7 +22,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
     const fetchPendientesCount = async () => {
       try {
         const response = await axios.get(
-          'https://51.178.31.63:3000/api/movilizaciones/pendientes/count',
+          'http://51.178.31.63:3000/api/movilizaciones/pendientes/count',
           {
             headers: {
               Authorization: `Bearer ${token}` // Incluye el token en el encabezado
