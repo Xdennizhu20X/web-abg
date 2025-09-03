@@ -20,7 +20,7 @@ export default function PerfilPage() {
       return;
     }
     try {
-      const res = await fetch('http://51.178.31.63:3000/api/usuarios/perfil', {
+      const res = await fetch('https://51.178.31.63:3000/api/usuarios/perfil', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -56,7 +56,7 @@ export default function PerfilPage() {
     setIsSaving(true);
 
     try {
-      const res = await fetch(`http://51.178.31.63:3000/api/usuarios/admin/usuarios/${usuario.id}`, {
+      const res = await fetch(`https://51.178.31.63:3000/api/usuarios/admin/usuarios/${usuario.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -31,7 +31,7 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
         try {
           setLoading(true);
           const token = localStorage.getItem("token");
-          const res = await axios.get("http://51.178.31.63:3000/api/movilizaciones", {
+          const res = await axios.get("https://51.178.31.63:3000/api/movilizaciones", {
             headers: { Authorization: `Bearer ${token}` },
           });
           setLocalData(res.data);
@@ -74,7 +74,7 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
       
       // Descargar el PDF directamente sin verificar estado
       const response = await fetch(
-        `http://51.178.31.63:3000/api/movilizaciones/${id}/certificado`,
+        `https://51.178.31.63:3000/api/movilizaciones/${id}/certificado`,
         {
           headers: { Authorization: `Bearer ${token}` },
           method: 'GET'
@@ -129,7 +129,7 @@ export default function SolicitudesTable({ data: propData, loading: propLoading 
       
       // Obtener el PDF
       const response = await fetch(
-        `http://51.178.31.63:3000/api/movilizaciones/${id}/certificado`,
+        `https://51.178.31.63:3000/api/movilizaciones/${id}/certificado`,
         {
           headers: { Authorization: `Bearer ${token}` },
           method: 'GET'

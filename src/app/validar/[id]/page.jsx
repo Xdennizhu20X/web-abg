@@ -27,7 +27,7 @@ export default function ValidacionPage({ params }) {
   useEffect(() => {
     if (!id || !token) return;
 
-    fetch(`http://51.178.31.63:3000/api/movilizaciones/${id}`, {
+    fetch(`https://51.178.31.63:3000/api/movilizaciones/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -62,7 +62,7 @@ export default function ValidacionPage({ params }) {
 
     try {
       const res = await fetch(
-        `http://51.178.31.63:3000/api/movilizaciones/${id}/validacion`,
+        `https://51.178.31.63:3000/api/movilizaciones/${id}/validacion`,
         {
           method: 'POST',
           headers: { 
@@ -89,7 +89,7 @@ export default function ValidacionPage({ params }) {
 
     try {
       const res = await fetch(
-        `http://51.178.31.63:3000/api/movilizaciones/${id}/rechazar`,
+        `https://51.178.31.63:3000/api/movilizaciones/${id}/rechazar`,
         {
           method: 'PUT',
           headers: { 

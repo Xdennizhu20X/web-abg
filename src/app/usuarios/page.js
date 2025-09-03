@@ -93,7 +93,7 @@ export default function UsuariosKanban() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await fetch(`http://51.178.31.63:3000/api/usuarios/admin/usuarios/${usuario.id}` , {
+          const res = await fetch(`https://51.178.31.63:3000/api/usuarios/admin/usuarios/${usuario.id}` , {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -139,7 +139,7 @@ export default function UsuariosKanban() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await fetch(`http://51.178.31.63:3000/api/usuarios/admin/usuarios/${usuario.id}`,
+          const res = await fetch(`https://51.178.31.63:3000/api/usuarios/admin/usuarios/${usuario.id}`,
            {
             method: 'PUT',
             headers: {
@@ -176,7 +176,7 @@ export default function UsuariosKanban() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await fetch(`http://51.178.31.63:3000/api/usuarios/admin/delete/usuarios/${id}`,
+          const res = await fetch(`https://51.178.31.63:3000/api/usuarios/admin/delete/usuarios/${id}`,
            {
             method: 'POST',
             headers: {
