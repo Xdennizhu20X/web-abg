@@ -93,7 +93,7 @@ export function GraficaPastelEstados() {
           <CardDescription>Distribución por estado actual</CardDescription>
         </CardHeader>
         <CardContent className="flex-1 pb-0">
-          <div className="flex items-center justify-center h-[250px]">
+          <div className="flex items-center justify-center h-[400px]">
             <div className="animate-pulse text-gray-500">Cargando datos...</div>
           </div>
         </CardContent>
@@ -109,7 +109,7 @@ export function GraficaPastelEstados() {
           <CardDescription>Distribución por estado actual</CardDescription>
         </CardHeader>
         <CardContent className="flex-1 pb-0">
-          <div className="flex items-center justify-center h-[250px]">
+          <div className="flex items-center justify-center h-[400px]">
             <div className="text-red-500">Error: {error}</div>
           </div>
         </CardContent>
@@ -125,7 +125,7 @@ export function GraficaPastelEstados() {
           <CardDescription>Distribución por estado actual</CardDescription>
         </CardHeader>
         <CardContent className="flex-1 pb-0">
-          <div className="flex items-center justify-center h-[250px]">
+          <div className="flex items-center justify-center h-[400px]">
             <div className="text-gray-500">No hay datos disponibles</div>
           </div>
         </CardContent>
@@ -142,7 +142,7 @@ export function GraficaPastelEstados() {
       <CardContent className="flex-1 pb-0">
         <ChartContainer
           config={chartConfig}
-          className="mx-auto aspect-square max-h-[250px]"
+          className="mx-auto h-[400px] w-full"
         >
           <PieChart>
             <ChartTooltip

@@ -368,7 +368,7 @@ export default function UsuariosTable() {
         </div>
       ) : (
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-          <TabsList className="grid w-full max-w-2xl grid-cols-6">
+          <TabsList className="flex w-full max-w-4xl flex-wrap gap-1">
             <TabsTrigger value="todos">Todos ({usuarios.length})</TabsTrigger>
             <TabsTrigger value="admin">
               Administradores ({usuarios.filter(u => u.rol === 'admin').length})

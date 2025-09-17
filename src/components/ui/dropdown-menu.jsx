@@ -1,10 +1,12 @@
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 
 const DropdownMenu = ({ children }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const menuRef = React.useRef(null);
+  const triggerRef = React.useRef(null);
 
   React.useEffect(() => {
     const handleClickOutside = (event) => {
@@ -20,17 +22,23 @@ const DropdownMenu = ({ children }) => {
   return (
     <div ref={menuRef} className="relative inline-block text-left">
       {React.Children.map(children, (child) =>
-        React.cloneElement(child, { isOpen, setIsOpen })
+        React.cloneElement(child, { isOpen, setIsOpen, triggerRef })
       )}
     </div>
   );
 };
 
 const DropdownMenuTrigger = React.forwardRef(
-  ({ className, children, isOpen, setIsOpen, ...props }, ref) => {
+  ({ className, children, isOpen, setIsOpen, triggerRef, ...props }, ref) => {
     return (
       <button
-        ref={ref}
+        ref={(node) => {
+          if (triggerRef) triggerRef.current = node;
+          if (ref) {
+            if (typeof ref === 'function') ref(node);
+            else ref.current = node;
+          }
+        }}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
@@ -47,20 +55,35 @@ const DropdownMenuTrigger = React.forwardRef(
 DropdownMenuTrigger.displayName = 'DropdownMenuTrigger';
 
 const DropdownMenuContent = React.forwardRef(
-  ({ className, align = 'end', isOpen, setIsOpen, ...props }, ref) => {
+  ({ className, align = 'end', isOpen, setIsOpen, triggerRef, ...props }, ref) => {
+    const [position, setPosition] = React.useState({ top: 0, left: 0 });
+
+    React.useEffect(() => {
+      if (isOpen && triggerRef?.current) {
+        const rect = triggerRef.current.getBoundingClientRect();
+        setPosition({
+          top: rect.bottom + window.scrollY + 4,
+          left: align === 'end' ? rect.right - 128 : rect.left
+        });
+      }
+    }, [isOpen, align, triggerRef]);
+
     if (!isOpen) return null;
 
-    return (
+    return createPortal(
       <div
         ref={ref}
         className={cn(
-          'absolute z-50 min-w-[8rem] overflow-hidden rounded-md border bg-white p-1 text-gray-950 shadow-md animate-in fade-in-0 zoom-in-95',
-          align === 'end' ? 'right-0' : 'left-0',
-          'mt-2',
+          'fixed z-50 min-w-[8rem] overflow-hidden rounded-md border bg-white p-1 text-gray-950 shadow-md animate-in fade-in-0 zoom-in-95',
           className
         )}
+        style={{
+          top: position.top,
+          left: position.left,
+        }}
         {...props}
-      />
+      />,
+      document.body
     );
   }
 );

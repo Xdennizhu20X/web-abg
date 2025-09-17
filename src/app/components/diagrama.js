@@ -332,13 +332,13 @@ export function Diagrama() {
         </>
       )}
 
-      <CardContent className="sm:h-82">
+      <CardContent className="flex-1 pb-0">
         {loading ? (
-          <div className="flex items-center justify-center h-full">Cargando...</div>
+          <div className="flex items-center justify-center h-[400px]">Cargando...</div>
         ) : error ? (
-          <div className="flex items-center justify-center h-full text-red-500">{error}</div>
+          <div className="flex items-center justify-center h-[400px] text-red-500">{error}</div>
         ) : hasData ? (
-          <ChartContainer config={chartConfig} className="sm:h-82 sm:w-full">
+          <ChartContainer config={chartConfig} className="mx-auto h-[400px] w-full">
             <BarChart data={chartData}>
               <CartesianGrid vertical={false} />
               <XAxis
@@ -363,7 +363,7 @@ export function Diagrama() {
             </BarChart>
           </ChartContainer>
         ) : (
-          <div className="flex items-center justify-center h-full p-4 border-2 border-dashed border-red-400 rounded-lg bg-red-50">
+          <div className="flex items-center justify-center h-[400px] p-4 border-2 border-dashed border-red-400 rounded-lg bg-red-50">
             <p className="text-red-700 font-semibold">
               {userId ? "No se encontraron movilizaciones para los filtros seleccionados." : "No hay datos globales disponibles."}
             </p>
