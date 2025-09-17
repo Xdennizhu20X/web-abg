@@ -61,8 +61,15 @@ const DropdownMenuContent = React.forwardRef(
     React.useEffect(() => {
       if (isOpen && triggerRef?.current) {
         const rect = triggerRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const menuHeight = 150; // Altura estimada del menú
+        const spaceBelow = viewportHeight - rect.bottom;
+
+        // Si no hay suficiente espacio abajo, abrirlo hacia arriba
+        const shouldOpenUpward = spaceBelow < menuHeight;
+
         setPosition({
-          top: rect.bottom + window.scrollY + 4,
+          top: shouldOpenUpward ? rect.top - menuHeight - 2 : rect.bottom + 2,
           left: align === 'end' ? rect.right - 128 : rect.left
         });
       }

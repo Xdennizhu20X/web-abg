@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Edit, Trash2, UserCog, Check, X, MoreHorizontal, Search } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Edit, Trash2, UserCog, Check, X, MoreHorizontal, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import Swal from 'sweetalert2';
 import {
   Table,
@@ -28,6 +28,8 @@ export default function UsuariosTable() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTab, setSelectedTab] = useState('todos');
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 5;
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
@@ -243,6 +245,17 @@ export default function UsuariosTable() {
     return matchesSearch && user.rol === selectedTab;
   });
 
+  // Calcular paginación
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const startIndex = (currentPage - 1) * usersPerPage;
+  const endIndex = startIndex + usersPerPage;
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Resetear página cuando cambia la búsqueda o tab
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedTab]);
+
   const UserTable = ({ users, isPending = false }) => (
     <div className="overflow-hidden rounded-lg border bg-white">
       <Table>
@@ -340,6 +353,52 @@ export default function UsuariosTable() {
     </div>
   );
 
+  const Pagination = ({ isPending = false }) => {
+    const totalUsersToShow = isPending ? pendingUsers.length : filteredUsers.length;
+    const totalPagesToShow = Math.ceil(totalUsersToShow / usersPerPage);
+
+    if (totalPagesToShow <= 1) return null;
+
+    return (
+      <div className="flex items-center justify-between px-2 py-4">
+        <div className="text-sm text-gray-700">
+          Mostrando {startIndex + 1} a {Math.min(endIndex, totalUsersToShow)} de {totalUsersToShow} usuarios
+        </div>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="p-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+
+          {Array.from({ length: totalPagesToShow }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                currentPage === page
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPagesToShow}
+            className="p-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -388,23 +447,28 @@ export default function UsuariosTable() {
           </TabsList>
 
           <TabsContent value="todos" className="mt-6">
-            <UserTable users={filteredUsers} />
+            <UserTable users={currentUsers} />
+            <Pagination />
           </TabsContent>
 
           <TabsContent value="admin" className="mt-6">
-            <UserTable users={filteredUsers} />
+            <UserTable users={currentUsers} />
+            <Pagination />
           </TabsContent>
 
           <TabsContent value="tecnico" className="mt-6">
-            <UserTable users={filteredUsers} />
+            <UserTable users={currentUsers} />
+            <Pagination />
           </TabsContent>
 
           <TabsContent value="ganadero" className="mt-6">
-            <UserTable users={filteredUsers} />
+            <UserTable users={currentUsers} />
+            <Pagination />
           </TabsContent>
 
           <TabsContent value="faenador" className="mt-6">
-            <UserTable users={filteredUsers} />
+            <UserTable users={currentUsers} />
+            <Pagination />
           </TabsContent>
 
           <TabsContent value="pendientes" className="mt-6">
@@ -415,7 +479,8 @@ export default function UsuariosTable() {
                 </p>
               </div>
             )}
-            <UserTable users={pendingUsers} isPending />
+            <UserTable users={pendingUsers.slice(startIndex, endIndex)} isPending />
+            <Pagination isPending />
           </TabsContent>
         </Tabs>
       )}
