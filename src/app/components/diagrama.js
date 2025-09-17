@@ -47,10 +47,23 @@ export function Diagrama() {
       setLoading(true);
       setError(null);
 
+      // Obtener token del localStorage
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
       if (!userId) {
         // --- Lógica para datos globales ---
         try {
-          const response = await fetch(`/api/reportes/datos-grafico-global`);
+          // Headers con autenticación si está disponible
+          const headers = {
+            'Content-Type': 'application/json'
+          };
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+
+          const response = await fetch(`/api/reportes/datos-grafico-global`, {
+            headers
+          });
           const result = await response.json();
           if (result.success) {
             const data = result.data;
@@ -98,7 +111,18 @@ export function Diagrama() {
           fechaDesde,
           fechaHasta,
         });
-        const response = await fetch(`/api/reportes/datos-grafico?${params}`);
+
+        // Headers con autenticación si está disponible
+        const headers = {
+          'Content-Type': 'application/json'
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`/api/reportes/datos-grafico?${params}`, {
+          headers
+        });
         const result = await response.json();
 
         if (result.success) {

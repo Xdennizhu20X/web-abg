@@ -17,9 +17,83 @@ export default function RegisterPage() {
     rol: 'tecnico'
   });
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuth(); // Usamos el contexto de autenticación
+
+  // Función para validar que solo contenga números
+  const isNumericOnly = (value) => {
+    return /^\d*$/.test(value);
+  };
+
+  // Función para validar números repetidos más de 3 veces consecutivas
+  const hasExcessiveRepeatedNumbers = (value) => {
+    return /(\d)\1{3,}/.test(value);
+  };
+
+  // Validador específico para cédula
+  const validateCedula = (ci) => {
+    const errors = [];
+
+    if (!isNumericOnly(ci)) {
+      errors.push('Solo se permiten números');
+    }
+
+    if (ci.length > 0 && ci.length !== 10) {
+      errors.push('Debe tener exactamente 10 dígitos');
+    }
+
+    if (hasExcessiveRepeatedNumbers(ci)) {
+      errors.push('No se permiten más de 3 números iguales consecutivos');
+    }
+
+    return errors;
+  };
+
+  // Validador específico para teléfono
+  const validateTelefono = (telefono) => {
+    const errors = [];
+
+    if (telefono && !isNumericOnly(telefono)) {
+      errors.push('Solo se permiten números');
+    }
+
+    if (telefono && telefono.length > 0 && (telefono.length < 7 || telefono.length > 15)) {
+      errors.push('Debe tener entre 7 y 15 dígitos');
+    }
+
+    if (telefono && hasExcessiveRepeatedNumbers(telefono)) {
+      errors.push('No se permiten más de 3 números iguales consecutivos');
+    }
+
+    return errors;
+  };
+
+  // Manejar cambios en campos numéricos con validación
+  const handleNumericChange = (fieldName, value) => {
+    // Solo permitir números
+    if (!isNumericOnly(value)) {
+      return; // No actualizar si contiene caracteres no numéricos
+    }
+
+    // Actualizar el valor
+    setForm(prev => ({ ...prev, [fieldName]: value }));
+
+    // Validar en tiempo real
+    let errors = [];
+    if (fieldName === 'ci') {
+      errors = validateCedula(value);
+    } else if (fieldName === 'telefono') {
+      errors = validateTelefono(value);
+    }
+
+    // Actualizar errores del campo
+    setFieldErrors(prev => ({
+      ...prev,
+      [fieldName]: errors.length > 0 ? errors : null
+    }));
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -46,18 +120,47 @@ export default function RegisterPage() {
       return;
     }
 
-    const ciRegex = /^\d{10}$/;
-    if (!ciRegex.test(form.ci)) {
-      setError('La cédula debe tener exactamente 10 dígitos');
+    // Validaciones mejoradas para cédula
+    const cedulaErrors = validateCedula(form.ci);
+    if (cedulaErrors.length > 0) {
+      setError(`Cédula inválida: ${cedulaErrors.join(', ')}`);
       setIsLoading(false);
       return;
+    }
+
+    // Validaciones para teléfono (solo si se proporciona)
+    if (form.telefono) {
+      const telefonoErrors = validateTelefono(form.telefono);
+      if (telefonoErrors.length > 0) {
+        setError(`Teléfono inválido: ${telefonoErrors.join(', ')}`);
+        setIsLoading(false);
+        return;
+      }
     }
 
     try {
       // Registrar al usuario
       const registerResponse = await registerUser(form);
 
-      // Iniciar sesión automáticamente después del registro
+      console.log('Register response received:', registerResponse);
+
+      // Verificar si el registro está pendiente de aprobación
+      if (registerResponse.isPending) {
+        await Swal.fire({
+          title: '¡Registro Recibido!',
+          text: 'Tu solicitud de registro ha sido enviada correctamente. Debes esperar la aprobación de un administrador para poder acceder al sistema.',
+          icon: 'info',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#3085d6',
+          allowOutsideClick: false
+        });
+
+        // Redirigir al login con mensaje informativo
+        router.push('/login?registered=pending');
+        return;
+      }
+
+      // Si el registro es exitoso y no está pendiente, hacer login automático
       await login({
         email: form.email,
         password: form.password
@@ -65,7 +168,7 @@ export default function RegisterPage() {
 
       await Swal.fire({
         title: '¡Registro exitoso!',
-        text: 'Tu cuenta ha sido creada correctamente',
+        text: 'Tu cuenta ha sido creada y activada correctamente',
         icon: 'success',
         confirmButtonText: 'Continuar',
         confirmButtonColor: '#E10600',
@@ -75,14 +178,44 @@ export default function RegisterPage() {
       router.push('/dashboard');
 
     } catch (err) {
-      setError(err.message || 'Ocurrió un error al registrarse');
-      console.error('Register error:', err);
+      console.error('Register error caught:', err);
+
+      // Verificar si el error es realmente sobre usuario pendiente
+      const errorMessage = err.message || 'Ocurrió un error al registrarse';
+
+      const isPendingMessage = errorMessage.includes('pendiente') ||
+                               errorMessage.includes('aprobación') ||
+                               errorMessage.includes('espera') ||
+                               errorMessage.includes('aprobar') ||
+                               errorMessage.includes('administrador') ||
+                               errorMessage.toLowerCase().includes('pending') ||
+                               errorMessage.includes('revisar') ||
+                               errorMessage.includes('activar');
+
+      if (isPendingMessage) {
+        // Tratar como registro exitoso pendiente
+        await Swal.fire({
+          title: '¡Registro Recibido!',
+          text: 'Tu solicitud de registro ha sido enviada correctamente. Debes esperar la aprobación de un administrador para poder acceder al sistema.',
+          icon: 'info',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#3085d6',
+          allowOutsideClick: false
+        });
+
+        // Redirigir al login con mensaje informativo
+        router.push('/login?registered=pending');
+        return;
+      }
+
+      // Si es un error real
+      setError(errorMessage);
 
       await Swal.fire({
-        title: 'Error',
-        text: err.message || 'Ocurrió un error al registrarse',
+        title: 'Error en el Registro',
+        text: errorMessage,
         icon: 'error',
-        confirmButtonText: 'Entendido',
+        confirmButtonText: 'Reintentar',
         confirmButtonColor: '#E10600',
       });
     } finally {
@@ -135,12 +268,23 @@ export default function RegisterPage() {
             <input
               type="text"
               value={form.ci}
-              onChange={(e) => setForm({ ...form, ci: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6e328a]/60 focus:outline-none transition"
-              placeholder="Tu número de cédula"
+              onChange={(e) => handleNumericChange('ci', e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition ${
+                fieldErrors.ci
+                  ? 'border-red-500 focus:ring-red-500/60'
+                  : 'border-gray-300 focus:ring-[#6e328a]/60'
+              }`}
+              placeholder="1234567890"
               required
               maxLength="10"
             />
+            {fieldErrors.ci && (
+              <div className="mt-1 text-sm text-red-600">
+                {fieldErrors.ci.map((error, index) => (
+                  <div key={index}>• {error}</div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
@@ -158,14 +302,25 @@ export default function RegisterPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700">Teléfono</label>
             <input
-              type="tel"
+              type="text"
               value={form.telefono}
-              onChange={(e) => setForm({ ...form, telefono: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6e328a]/60 focus:outline-none transition"
+              onChange={(e) => handleNumericChange('telefono', e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition ${
+                fieldErrors.telefono
+                  ? 'border-red-500 focus:ring-red-500/60'
+                  : 'border-gray-300 focus:ring-[#6e328a]/60'
+              }`}
               placeholder="0987654321"
-              pattern="[\d\s+-]{7,15}"
-              title="Número de teléfono (7-15 dígitos, puede incluir +, - o espacios)"
+              maxLength="15"
+              title="Solo números, entre 7 y 15 dígitos"
             />
+            {fieldErrors.telefono && (
+              <div className="mt-1 text-sm text-red-600">
+                {fieldErrors.telefono.map((error, index) => (
+                  <div key={index}>• {error}</div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>

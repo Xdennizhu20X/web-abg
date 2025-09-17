@@ -6,8 +6,9 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+
+// Importación dinámica para evitar problemas de SSR
 const PDFDownloadButton = dynamic(() => import('../../components/PDFDownloadButton'), { ssr: false });
-import html2pdf from 'html2pdf.js';
 
 
 export default function CertificadoZoosanitario() {
@@ -17,7 +18,7 @@ export default function CertificadoZoosanitario() {
   const pdfRef = useRef();
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || typeof window === 'undefined') return;
     const fetchSolicitud = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -35,6 +36,7 @@ export default function CertificadoZoosanitario() {
   }, [id]);
 
 const handleDescargarPDFServidor = () => {
+  if (typeof window === 'undefined') return;
   const link = document.createElement('a');
   link.href = `http://51.178.31.63:3000/api/pdf/${solicitud.id}`;
   link.download = `certificado-${solicitud.id}.pdf`;
@@ -100,7 +102,7 @@ const handleDescargarPDFServidor = () => {
   )}
   
   <button
-    onClick={() => window.print()}
+    onClick={() => typeof window !== 'undefined' && window.print()}
     className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 no-print"
   >
     Imprimir / Guardar como PDF

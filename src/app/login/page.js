@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
@@ -13,7 +13,23 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth(); // Usamos el contexto de autenticación
+
+  // Verificar si viene del registro pendiente
+  useEffect(() => {
+    const registered = searchParams.get('registered');
+    if (registered === 'pending') {
+      Swal.fire({
+        title: 'Cuenta Pendiente de Aprobación',
+        text: 'Tu cuenta ha sido registrada exitosamente, pero está pendiente de aprobación por un administrador. No podrás iniciar sesión hasta que sea aprobada.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#f59e0b',
+        allowOutsideClick: false
+      });
+    }
+  }, [searchParams]);
 
  const handleLogin = async (e) => {
   e.preventDefault();
@@ -83,19 +99,38 @@ export default function LoginPage() {
   } catch (err) {
     console.error('Error en login:', err);
 
+    let title = 'Error';
+    let icon = 'error';
     let errorMessage = 'Ocurrió un error al iniciar sesión';
-    if (err.message.includes('credentials')) {
-      errorMessage = 'Credenciales incorrectas';
-    } else if (err.message.includes('network')) {
-      errorMessage = 'Problema de conexión con el servidor';
+
+    // Verificar si es un usuario pendiente de aprobación
+    if (err.message.includes('pendiente') ||
+        err.message.includes('aprobación') ||
+        err.message.includes('espera') ||
+        err.message.toLowerCase().includes('pending') ||
+        err.message.includes('no aprobado') ||
+        err.message.includes('cuenta inactiva')) {
+
+      title = 'Cuenta Pendiente';
+      icon = 'warning';
+      errorMessage = 'Tu cuenta está pendiente de aprobación por un administrador. Por favor espera a que sea activada.';
+
+    } else if (err.message.includes('credentials') || err.message.includes('credenciales')) {
+      errorMessage = 'Credenciales incorrectas. Verifica tu email y contraseña.';
+    } else if (err.message.includes('network') || err.message.includes('conexión')) {
+      errorMessage = 'Problema de conexión con el servidor. Intenta nuevamente.';
+    } else if (err.message.includes('suspendida') || err.message.includes('bloqueada')) {
+      title = 'Cuenta Suspendida';
+      icon = 'warning';
+      errorMessage = 'Tu cuenta ha sido suspendida. Contacta con un administrador.';
     }
 
     await Swal.fire({
-      title: 'Error',
+      title: title,
       text: errorMessage,
-      icon: 'error',
+      icon: icon,
       confirmButtonText: 'Entendido',
-      confirmButtonColor: '#E10600',
+      confirmButtonColor: icon === 'warning' ? '#f59e0b' : '#E10600',
     });
 
   } finally {

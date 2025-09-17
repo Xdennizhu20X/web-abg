@@ -54,12 +54,46 @@ export const registerUser = async (userData) => {
     body: JSON.stringify(userData),
   });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Error al registrar usuario');
+  const responseData = await response.json();
+
+  console.log('Response status:', response.status);
+  console.log('Response data:', responseData);
+
+  // Verificar si es un registro exitoso pero pendiente de aprobación
+  // Primero verificar en el mensaje de respuesta
+  const isPendingUser = responseData.message && (
+    responseData.message.includes('pendiente') ||
+    responseData.message.includes('aprobación') ||
+    responseData.message.includes('espera') ||
+    responseData.message.includes('aprobar') ||
+    responseData.message.includes('administrador') ||
+    responseData.message.toLowerCase().includes('pending') ||
+    responseData.message.includes('revisar') ||
+    responseData.message.includes('activar')
+  );
+
+  // Si la respuesta indica que es un registro pendiente, tratarlo como éxito
+  if (isPendingUser) {
+    return {
+      success: true,
+      isPending: true,
+      message: responseData.message || 'Usuario registrado, esperando aprobación del administrador',
+      data: responseData.data || null
+    };
   }
 
-  return await response.json();
+  // Si la respuesta es exitosa (200/201)
+  if (response.ok || response.status === 201) {
+    return {
+      success: true,
+      isPending: false,
+      message: responseData.message || 'Usuario registrado exitosamente',
+      data: responseData.data || null
+    };
+  }
+
+  // Si es un error real, lanzar excepción
+  throw new Error(responseData.message || 'Error al registrar usuario');
 };
 
 export const logoutUser = async (token) => {

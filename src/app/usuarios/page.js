@@ -1,13 +1,33 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Edit, Trash2, UserCog, Check, X } from 'lucide-react';
+import { Edit, Trash2, UserCog, Check, X, MoreHorizontal, Search } from 'lucide-react';
 import Swal from 'sweetalert2';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export default function UsuariosKanban() {
+export default function UsuariosTable() {
   const [usuarios, setUsuarios] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTab, setSelectedTab] = useState('todos');
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
@@ -48,7 +68,7 @@ export default function UsuariosKanban() {
       const data = await res.json();
       if (data.success) {
         Swal.fire('¡Aprobado!', 'El usuario ha sido aprobado.', 'success');
-        fetchUsuarios(); // Recargar la lista de usuarios
+        fetchUsuarios();
       } else {
         Swal.fire('Error', data.message || 'No se pudo aprobar el usuario.', 'error');
       }
@@ -69,7 +89,7 @@ export default function UsuariosKanban() {
       const data = await res.json();
       if (data.success) {
         Swal.fire('¡Rechazado!', 'El usuario ha sido rechazado.', 'success');
-        fetchUsuarios(); // Recargar la lista de usuarios
+        fetchUsuarios();
       } else {
         Swal.fire('Error', data.message || 'No se pudo rechazar el usuario.', 'error');
       }
@@ -80,31 +100,37 @@ export default function UsuariosKanban() {
   };
 
   const handleRoleChange = (usuario) => {
-    const newRole = usuario.rol === 'admin' ? 'tecnico' : 'admin';
     Swal.fire({
-      title: '¿Cambiar Rol?',
-      text: `¿Quieres cambiar el rol de ${usuario.nombre} de ${usuario.rol} a ${newRole}?`,
-      icon: 'question',
+      title: 'Cambiar Rol',
+      text: `Selecciona el nuevo rol para ${usuario.nombre}`,
+      input: 'select',
+      inputOptions: {
+        admin: 'Admin',
+        tecnico: 'Técnico',
+        ganadero: 'Ganadero',
+        faenador: 'Faenador'
+      },
+      inputValue: usuario.rol,
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, ¡cambiar!',
+      confirmButtonText: 'Cambiar',
       cancelButtonText: 'Cancelar',
     }).then(async (result) => {
-      if (result.isConfirmed) {
+      if (result.isConfirmed && result.value !== usuario.rol) {
         try {
-          const res = await fetch(`http://51.178.31.63:3000/api/usuarios/admin/usuarios/${usuario.id}` , {
+          const res = await fetch(`http://51.178.31.63:3000/api/usuarios/admin/usuarios/${usuario.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ rol: newRole }),
+            body: JSON.stringify({ rol: result.value }),
           });
           const data = await res.json();
           if (data.success) {
             Swal.fire('¡Rol Cambiado!', `El rol de ${usuario.nombre} ha sido actualizado.`, 'success');
-            fetchUsuarios(); // Recargar la lista de usuarios
+            fetchUsuarios();
           } else {
             Swal.fire('Error', data.message || 'No se pudo cambiar el rol del usuario.', 'error');
           }
@@ -139,8 +165,7 @@ export default function UsuariosKanban() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await fetch(`http://51.178.31.63:3000/api/usuarios/admin/usuarios/${usuario.id}`,
-           {
+          const res = await fetch(`http://51.178.31.63:3000/api/usuarios/admin/usuarios/${usuario.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -151,7 +176,7 @@ export default function UsuariosKanban() {
           const data = await res.json();
           if (data.success) {
             Swal.fire('¡Actualizado!', 'El usuario ha sido actualizado.', 'success');
-            fetchUsuarios(); // Recargar la lista de usuarios
+            fetchUsuarios();
           } else {
             Swal.fire('Error', data.message || 'No se pudo actualizar el usuario.', 'error');
           }
@@ -176,8 +201,7 @@ export default function UsuariosKanban() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await fetch(`http://51.178.31.63:3000/api/usuarios/admin/delete/usuarios/${id}`,
-           {
+          const res = await fetch(`http://51.178.31.63:3000/api/usuarios/admin/delete/usuarios/${id}`, {
             method: 'POST',
             headers: {
               Authorization: `Bearer ${token}`,
@@ -186,7 +210,7 @@ export default function UsuariosKanban() {
           const data = await res.json();
           if (data.success) {
             Swal.fire('¡Eliminado!', 'El usuario ha sido eliminado.', 'success');
-            fetchUsuarios(); // Recargar la lista de usuarios
+            fetchUsuarios();
           } else {
             Swal.fire('Error', data.message || 'No se pudo eliminar el usuario.', 'error');
           }
@@ -198,149 +222,203 @@ export default function UsuariosKanban() {
     });
   };
 
-  const roles = ['admin', 'tecnico', 'ganadero', 'faenador'];
-
   const roleColors = {
-    admin: {
-      border: 'border-yellow-300',
-      text: 'text-yellow-300',
-      hover: 'hover:bg-yellow-100',
-      bg: 'bg-yellow-50',
-    },
-    tecnico: {
-      border: 'border-blue-500',
-      text: 'text-blue-600',
-      hover: 'hover:bg-blue-100',
-      bg: 'bg-blue-50',
-    },
-    ganadero: {
-      border: 'border-red-500',
-      text: 'text-red-600',
-      hover: 'hover:bg-red-100',
-      bg: 'bg-red-50',
-    },
-    faenador: {
-      border: 'border-green-500',
-      text: 'text-green-600',
-      hover: 'hover:bg-green-100',
-      bg: 'bg-green-50',
-    },
+    admin: 'warning',
+    tecnico: 'info',
+    ganadero: 'destructive',
+    faenador: 'success',
   };
 
-  const groupedUsers = roles.reduce((acc, rol) => {
-    acc[rol] = usuarios.filter(user => user.rol === rol);
-    return acc;
-  }, {});
+  const getRoleBadgeVariant = (rol) => {
+    return roleColors[rol] || 'default';
+  };
+
+  const filteredUsers = usuarios.filter((user) => {
+    const matchesSearch =
+      user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.ci.toLowerCase().includes(searchTerm.toLowerCase());
+
+    if (selectedTab === 'todos') return matchesSearch;
+    return matchesSearch && user.rol === selectedTab;
+  });
+
+  const UserTable = ({ users, isPending = false }) => (
+    <div className="overflow-hidden rounded-lg border bg-white">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[250px]">Nombre</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>CI</TableHead>
+            <TableHead>Teléfono</TableHead>
+            <TableHead>Rol</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead>Fecha Registro</TableHead>
+            <TableHead className="text-right">Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {users.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={8} className="h-24 text-center text-gray-500">
+                {isPending ? 'No hay usuarios pendientes' : 'No se encontraron usuarios'}
+              </TableCell>
+            </TableRow>
+          ) : (
+            users.map((user) => (
+              <TableRow key={user.id} className="hover:bg-gray-50">
+                <TableCell className="font-medium">{user.nombre}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.ci}</TableCell>
+                <TableCell>{user.telefono || 'No registrado'}</TableCell>
+                <TableCell>
+                  <Badge variant={getRoleBadgeVariant(user.rol)} className="capitalize">
+                    {user.rol}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {isPending ? (
+                    <Badge variant="secondary">Pendiente</Badge>
+                  ) : (
+                    <Badge variant="outline">Activo</Badge>
+                  )}
+                </TableCell>
+                <TableCell>{new Date(user.fecha_registro).toLocaleDateString()}</TableCell>
+                <TableCell className="text-right">
+                  {isPending ? (
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => handleApprove(user.id)}
+                        className="p-2 text-green-600 hover:bg-green-100 rounded-md transition"
+                        aria-label="Aprobar usuario"
+                      >
+                        <Check size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleReject(user.id)}
+                        className="p-2 text-red-600 hover:bg-red-100 rounded-md transition"
+                        aria-label="Rechazar usuario"
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                  ) : (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="h-8 w-8 p-0 hover:bg-gray-100 rounded-md">
+                        <span className="sr-only">Abrir menú</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleEdit(user)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleRoleChange(user)}>
+                          <UserCog className="mr-2 h-4 w-4" />
+                          Cambiar Rol
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => handleDelete(user.id)}
+                          className="text-red-600 focus:text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Eliminar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
 
   return (
-    <>
-      <h2 className="text-3xl font-semibold text-center bg-gradient-to-r from-yellow-400 via-blue-500 to-red-500 inline-block text-transparent bg-clip-text mb-4">Usuarios del Sistema</h2>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">Gestión de Usuarios</h2>
+        <p className="text-gray-500 mt-2">Administra los usuarios del sistema y sus permisos</p>
+      </div>
+
+      <div className="flex items-center space-x-4">
+        <div className="flex-1 max-w-md">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <input
+              type="text"
+              placeholder="Buscar por nombre, email o CI..."
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
 
       {loading ? (
-        <p className="text-gray-600">Cargando usuarios...</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div key="pendiente" className="bg-white rounded-xl shadow-md p-4 border-t-4 border-gray-500 mb-6">
-              <h3 className={`text-xl font-bold text-center mb-4 capitalize text-gray-600`}>
-                Usuarios Pendientes
-              </h3>
-              {pendingUsers.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center">Sin usuarios pendientes</p>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {pendingUsers.map((user) => (
-                    <div
-                      key={user.id}
-                      className={`
-                        border-l-4 p-4 rounded-r-xl shadow-sm transition
-                        border-gray-500 hover:bg-gray-100 bg-gray-50
-                      `}
-                    >
-                      <h4 className="font-semibold text-gray-800 text-lg">{user.nombre}</h4>
-                      <p className="text-sm text-gray-600">📧 {user.email}</p>
-                      <p className="text-sm text-gray-600">🪪 CI: {user.ci}</p>
-                      <p className="text-sm text-gray-600">📞 Tel: {user.telefono || 'No disponible'}</p>
-                      <p className="text-xs text-gray-400 mt-2">
-                        🗓 Registrado: {new Date(user.fecha_registro).toLocaleDateString()}
-                      </p>
-                      <div className="flex justify-end gap-2 mt-3">
-                        <button
-                          onClick={() => handleApprove(user.id)}
-                          className="p-2 text-green-600 hover:bg-green-100 rounded-full transition"
-                          aria-label="Aprobar usuario"
-                        >
-                          <Check size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleReject(user.id)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-full transition"
-                          aria-label="Rechazar usuario"
-                        >
-                          <X size={18} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          {roles.map((rol) => (
-            <div key={rol} className="bg-white rounded-xl shadow-md p-4 border-t-4 border-purple-500 mb-6">
-              <h3 className={`text-xl font-bold text-center mb-4 capitalize ${roleColors[rol].text}`}>
-                {rol}s
-              </h3>
-              {groupedUsers[rol].length === 0 ? (
-                <p className="text-gray-500 text-sm text-center">Sin usuarios</p>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {groupedUsers[rol].map((user) => (
-                    <div
-                      key={user.id}
-                      className={`
-                        border-l-4 p-4 rounded-r-xl shadow-sm transition
-                        ${roleColors[rol].border} ${roleColors[rol].hover} bg-gray-50
-                      `}
-                    >
-                      <h4 className="font-semibold text-gray-800 text-lg">{user.nombre}</h4>
-                      <p className="text-sm text-gray-600">📧 {user.email}</p>
-                      <p className="text-sm text-gray-600">🪪 CI: {user.ci}</p>
-                      <p className="text-sm text-gray-600">📞 Tel: {user.telefono || 'No disponible'}</p>
-                      <p className="text-xs text-gray-400 mt-2">
-                        🗓 Registrado: {new Date(user.fecha_registro).toLocaleDateString()}
-                      </p>
-                      <div className="flex justify-end gap-2 mt-3">
-                        {['admin', 'tecnico'].includes(user.rol) && (
-                          <button
-                            onClick={() => handleRoleChange(user)}
-                            className="p-2 text-green-600 hover:bg-green-100 rounded-full transition"
-                            aria-label="Cambiar rol"
-                          >
-                            <UserCog size={18} />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleEdit(user)}
-                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition"
-                          aria-label="Editar usuario"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(user.id)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-full transition"
-                          aria-label="Eliminar usuario"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-600">Cargando usuarios...</p>
         </div>
+      ) : (
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+          <TabsList className="grid w-full max-w-2xl grid-cols-6">
+            <TabsTrigger value="todos">Todos ({usuarios.length})</TabsTrigger>
+            <TabsTrigger value="admin">
+              Admins ({usuarios.filter(u => u.rol === 'admin').length})
+            </TabsTrigger>
+            <TabsTrigger value="tecnico">
+              Técnicos ({usuarios.filter(u => u.rol === 'tecnico').length})
+            </TabsTrigger>
+            <TabsTrigger value="ganadero">
+              Ganaderos ({usuarios.filter(u => u.rol === 'ganadero').length})
+            </TabsTrigger>
+            <TabsTrigger value="faenador">
+              Faenadores ({usuarios.filter(u => u.rol === 'faenador').length})
+            </TabsTrigger>
+            <TabsTrigger value="pendientes">
+              Pendientes ({pendingUsers.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="todos" className="mt-6">
+            <UserTable users={filteredUsers} />
+          </TabsContent>
+
+          <TabsContent value="admin" className="mt-6">
+            <UserTable users={filteredUsers} />
+          </TabsContent>
+
+          <TabsContent value="tecnico" className="mt-6">
+            <UserTable users={filteredUsers} />
+          </TabsContent>
+
+          <TabsContent value="ganadero" className="mt-6">
+            <UserTable users={filteredUsers} />
+          </TabsContent>
+
+          <TabsContent value="faenador" className="mt-6">
+            <UserTable users={filteredUsers} />
+          </TabsContent>
+
+          <TabsContent value="pendientes" className="mt-6">
+            {pendingUsers.length > 0 && (
+              <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  Hay {pendingUsers.length} usuario(s) esperando aprobación. Revisa y aprueba los registros válidos.
+                </p>
+              </div>
+            )}
+            <UserTable users={pendingUsers} isPending />
+          </TabsContent>
+        </Tabs>
       )}
-    </>
+    </div>
   );
 }
