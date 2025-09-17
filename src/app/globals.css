@@ -113,3 +113,46 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Estilos específicos para impresión */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  body {
+    background: white !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Asegurar que el contenido principal ocupe toda la página */
+  main {
+    margin: 0 !important;
+    padding: 20px !important;
+  }
+
+  /* Ocultar elementos de navegación */
+  nav, aside, .sidebar {
+    display: none !important;
+  }
+
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  .no-break {
+    page-break-inside: avoid;
+  }
+
+  /* Remover sombras y efectos para impresión limpia */
+  .shadow, .shadow-sm, .shadow-md, .shadow-lg {
+    box-shadow: none !important;
+  }
+}

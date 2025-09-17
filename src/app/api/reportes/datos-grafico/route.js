@@ -2,24 +2,25 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 // Obtener datos de movilizaciones filtrados por cédula desde el backend
-async function obtenerDatosMovilizacionesPorCedula(filtros, token) {
+async function obtenerDatosMovilizacionesPorCi(filtros, token) {
   try {
-    const { cedula, fechaDesde, fechaHasta } = filtros;
+    const { ci, fechaDesde, fechaHasta } = filtros;
 
-    if (!cedula) {
+    if (!ci) {
       return {
         totalMovilizaciones: 0,
         totalAnimales: 0,
         totalAves: 0,
         movilizaciones: [],
-        message: 'Cédula no proporcionada'
+        message: 'CI no proporcionado'
       };
     }
 
-    // Primero, obtener todas las movilizaciones
+    // Primero, obtener todas las movilizaciones filtradas por CI
     const params = new URLSearchParams();
     if (fechaDesde) params.append('fecha_inicio', fechaDesde);
     if (fechaHasta) params.append('fecha_fin', fechaHasta);
+    if (ci) params.append('ci', ci);
 
     // Headers con autenticación
     const headers = {
@@ -31,20 +32,26 @@ async function obtenerDatosMovilizacionesPorCedula(filtros, token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    const backendUrl = `http://51.178.31.63:3000/api/movilizaciones/filtrar?${params}`;
+    console.log('🌐 URL backend:', backendUrl);
+    console.log('📋 Headers enviados:', headers);
+
     // Llamada al backend real
-    const response = await fetch(
-      `http://51.178.31.63:3000/api/movilizaciones/filtrar?${params}`,
-      {
+    const response = await fetch(backendUrl, {
         method: 'GET',
         headers,
       }
     );
 
+    console.log('📡 Status respuesta backend:', response.status);
+    console.log('✅ Response OK:', response.ok);
+
     if (!response.ok) {
-      console.error('Error al obtener movilizaciones del backend:', response.status);
+      console.error('❌ Error al obtener movilizaciones del backend:', response.status);
 
       // Si es 401, retornar datos vacíos
       if (response.status === 401) {
+        console.log('🔒 Error 401 - Requiere autenticación');
         return {
           totalMovilizaciones: 0,
           totalAnimales: 0,
@@ -58,30 +65,41 @@ async function obtenerDatosMovilizacionesPorCedula(filtros, token) {
     }
 
     const data = await response.json();
+    console.log('📊 Respuesta completa del backend filtrar:', data);
 
-    // Si data.data existe, usarlo, si no, usar data directamente
-    const todasLasMovilizaciones = data.data || data || [];
+    // El backend ahora devuelve la estructura { success, data, total }
+    const todasLasMovilizaciones = data.data || [];
+    console.log('📋 Total movilizaciones recibidas:', todasLasMovilizaciones.length);
 
-    // Filtrar por cédula del usuario (puede estar en el Usuario relacionado)
-    const movilizacionesFiltradas = todasLasMovilizaciones.filter(mov => {
-      // Verificar si la movilización pertenece al usuario con la cédula especificada
-      // Puede venir de diferentes formas según la estructura
-      if (mov.Usuario) {
-        return mov.Usuario.ci === cedula ||
-               mov.Usuario.cedula === cedula ||
-               mov.Usuario.identificacion === cedula;
+    // NUEVA VERIFICACIÓN: Si no hay movilizaciones, intentar consulta sin filtros de fecha para verificar
+    if (todasLasMovilizaciones.length === 0) {
+      console.log('🔍 === VERIFICACIÓN SIN FILTROS ===');
+      try {
+        const responseSinFiltros = await fetch(
+          `http://51.178.31.63:3000/api/movilizaciones`,
+          {
+            method: 'GET',
+            headers,
+          }
+        );
+
+        if (responseSinFiltros.ok) {
+          const dataSinFiltros = await responseSinFiltros.json();
+          console.log('📊 Total movilizaciones SIN filtros:', dataSinFiltros.length || 0);
+          console.log('📊 Estructura primera movilización SIN filtros:', dataSinFiltros[0]);
+        }
+      } catch (err) {
+        console.log('❌ Error verificando sin filtros:', err.message);
       }
-      // También verificar en el solicitante si existe
-      if (mov.cedula_solicitante) {
-        return mov.cedula_solicitante === cedula;
-      }
-      // Verificar en predios si tienen información del propietario
-      if (mov.predio_origen) {
-        return mov.predio_origen.propietario_ci === cedula ||
-               mov.predio_origen.ci_propietario === cedula;
-      }
-      return false;
-    });
+      console.log('🔍 === FIN VERIFICACIÓN ===');
+    }
+
+    // El backend ya devolvió las movilizaciones filtradas por CI
+    console.log('✅ Backend filtró correctamente por CI:', ci);
+    console.log('📊 Estructura de primera movilización (ejemplo):', todasLasMovilizaciones[0]);
+
+    const movilizacionesFiltradas = todasLasMovilizaciones;
+    console.log('🔍 Movilizaciones ya filtradas por backend:', movilizacionesFiltradas.length);
 
     // Calcular totales
     let totalMovilizaciones = 0;
@@ -108,7 +126,7 @@ async function obtenerDatosMovilizacionesPorCedula(filtros, token) {
       });
     }
 
-    console.log(`Datos para cédula ${cedula}:`, {
+    console.log(`Datos para CI ${ci}:`, {
       totalMovilizaciones,
       totalAnimales,
       totalAves,
@@ -123,7 +141,7 @@ async function obtenerDatosMovilizacionesPorCedula(filtros, token) {
       movilizaciones: movilizacionesFiltradas,
     };
   } catch (error) {
-    console.error('Error en obtenerDatosMovilizacionesPorCedula:', error);
+    console.error('Error en obtenerDatosMovilizacionesPorCi:', error);
     // Devolver datos vacíos en caso de error
     return {
       totalMovilizaciones: 0,
@@ -136,7 +154,7 @@ async function obtenerDatosMovilizacionesPorCedula(filtros, token) {
 }
 
 // Función alternativa que busca por usuario_id si tenemos acceso
-async function buscarPorUsuario(cedula, token) {
+async function buscarPorUsuario(ci, token) {
   try {
     // Headers con autenticación
     const headers = {
@@ -147,9 +165,9 @@ async function buscarPorUsuario(cedula, token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Intentar buscar el usuario por cédula primero
+    // Intentar buscar el usuario por CI primero
     const response = await fetch(
-      `http://51.178.31.63:3000/api/usuarios/buscar-por-cedula/${cedula}`,
+      `http://51.178.31.63:3000/api/usuarios/buscar-por-ci/${ci}`,
       {
         method: 'GET',
         headers,
@@ -162,7 +180,7 @@ async function buscarPorUsuario(cedula, token) {
     }
     return null;
   } catch (error) {
-    console.error('Error buscando usuario por cédula:', error);
+    console.error('Error buscando usuario por CI:', error);
     return null;
   }
 }
@@ -170,14 +188,23 @@ async function buscarPorUsuario(cedula, token) {
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const cedula = searchParams.get('cedula');
+    const ci = searchParams.get('ci');
     const fechaDesde = searchParams.get('fechaDesde');
     const fechaHasta = searchParams.get('fechaHasta');
 
-    if (!cedula) {
+    console.log('🔍 === API REPORTES/DATOS-GRAFICO DEBUG ===');
+    console.log('📝 Request URL:', request.url);
+    console.log('📋 Search Params:', {
+      ci,
+      fechaDesde,
+      fechaHasta
+    });
+
+    if (!ci) {
+      console.log('❌ CI no proporcionado');
       return NextResponse.json({
         success: false,
-        message: 'El número de cédula es requerido.'
+        message: 'El número de CI es requerido.'
       }, { status: 400 });
     }
 
@@ -201,18 +228,31 @@ export async function GET(request) {
       token = searchParams.get('token');
     }
 
-    const filtros = { cedula, fechaDesde, fechaHasta };
-    const data = await obtenerDatosMovilizacionesPorCedula(filtros, token);
+    console.log('🔑 Token obtenido:', !!token);
+    console.log('📋 Authorization header:', authHeader ? 'Present' : 'Missing');
+
+    const filtros = { ci, fechaDesde, fechaHasta };
+    console.log('🔍 Filtros a enviar:', filtros);
+
+    const data = await obtenerDatosMovilizacionesPorCi(filtros, token);
 
     // Si no encontramos movilizaciones, intentar buscar por usuario_id
     if (data.totalMovilizaciones === 0 && token) {
-      const usuarioId = await buscarPorUsuario(cedula, token);
+      const usuarioId = await buscarPorUsuario(ci, token);
       if (usuarioId) {
         // Intentar de nuevo con el usuario_id
         console.log(`Intentando búsqueda alternativa con usuario_id: ${usuarioId}`);
         // Aquí podrías hacer otra búsqueda si tienes un endpoint específico para usuario_id
       }
     }
+
+    // Agregar información de debug para ayudar a entender el problema
+    const debugInfo = {
+      backendResponse: data,
+      filtros,
+      totalRecibidas: data.movilizaciones?.length || 0,
+      primeraMovilizacion: data.movilizaciones?.[0] || null
+    };
 
     return NextResponse.json({
       success: true,
@@ -222,6 +262,7 @@ export async function GET(request) {
         totalAves: data.totalAves,
         movilizaciones: data.movilizaciones,
       },
+      debug: debugInfo // Información adicional para debug
     });
   } catch (error) {
     console.error('Error al obtener los datos para el gráfico:', error);

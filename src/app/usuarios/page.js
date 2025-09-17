@@ -371,7 +371,7 @@ export default function UsuariosTable() {
           <TabsList className="grid w-full max-w-2xl grid-cols-6">
             <TabsTrigger value="todos">Todos ({usuarios.length})</TabsTrigger>
             <TabsTrigger value="admin">
-              Admins ({usuarios.filter(u => u.rol === 'admin').length})
+              Administradores ({usuarios.filter(u => u.rol === 'admin').length})
             </TabsTrigger>
             <TabsTrigger value="tecnico">
               Técnicos ({usuarios.filter(u => u.rol === 'tecnico').length})

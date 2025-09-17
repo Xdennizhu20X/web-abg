@@ -74,8 +74,8 @@ export function Diagrama() {
             ];
             setChartData(formattedData);
             setMetaData({
-              title: "Estadísticas Globales de Movilización",
-              description: "Datos agregados de todas las movilizaciones."
+              title: "HOJAS DE MOVILIZACIÓN",
+              description: ""
             });
           } else {
             setError(result.message);
@@ -107,7 +107,7 @@ export function Diagrama() {
 
       try {
         const params = new URLSearchParams({
-          cedula: userId,
+          ci: userId,
           fechaDesde,
           fechaHasta,
         });
@@ -120,10 +120,37 @@ export function Diagrama() {
           headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const response = await fetch(`/api/reportes/datos-grafico?${params}`, {
+        const requestUrl = `/api/reportes/datos-grafico?${params}`;
+
+        // LOGS DE DEBUG
+        console.log('🔍 === BÚSQUEDA POR CÉDULA DEBUG ===');
+        console.log('📝 Parámetros de búsqueda:', {
+          cedula: userId,
+          fechaDesde,
+          fechaHasta,
+          filter,
+          selectedYear,
+          selectedMonth
+        });
+        console.log('🌐 URL de solicitud:', requestUrl);
+        console.log('📋 Headers:', headers);
+        console.log('🔑 Token presente:', !!token);
+
+        const response = await fetch(requestUrl, {
           headers
         });
+
+        console.log('📡 Status de respuesta:', response.status);
+        console.log('✅ Response OK:', response.ok);
+
         const result = await response.json();
+
+        console.log('📊 Respuesta completa del backend:', result);
+        console.log('✔️ Success:', result.success);
+        console.log('📈 Data:', result.data);
+        console.log('❌ Message:', result.message);
+        console.log('🔧 Debug Info:', result.debug);
+        console.log('🔍 === FIN DEBUG ===');
 
         if (result.success) {
           const data = result.data;
@@ -144,6 +171,12 @@ export function Diagrama() {
           setMetaData({ title: "Error", description: result.message });
         }
       } catch (err) {
+        console.log('❌ === ERROR EN BÚSQUEDA POR CÉDULA ===');
+        console.log('🚨 Error completo:', err);
+        console.log('📝 Error message:', err.message);
+        console.log('📚 Error stack:', err.stack);
+        console.log('❌ === FIN ERROR ===');
+
         setError("Error de conexión al obtener los datos.");
         setChartData([]);
         setMetaData({ title: "Error", description: "No se pudo conectar al servidor." });
@@ -203,7 +236,7 @@ export function Diagrama() {
   const hasData = chartData.length > 0 && chartData.some((item) => item.total > 0);
 
   return (
-    <Card className="rounded-2xl border-2 bg-white border-black/10">
+    <Card className="rounded-2xl bg-white">
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
@@ -341,14 +374,8 @@ export function Diagrama() {
       <CardFooter>
         <div className="flex w-full items-start gap-2 text-sm">
           <div className="grid gap-2">
-            <div className="flex items-center gap-2 font-medium leading-none">
-              Datos actualizados en tiempo real
-              <TrendingUp className="h-4 w-4" />
-            </div>
             <div className="flex items-center gap-2 leading-none text-muted-foreground">
-              {filter === "mesEspecifico"
-                ? `Mes: ${new Date(0, selectedMonth).toLocaleString('es', { month: 'long' })} ${selectedYear}`
-                : `Año: ${selectedYear}`}
+              Año: 2025
             </div>
           </div>
         </div>

@@ -12,6 +12,7 @@ import {
   LogOut,
   ClipboardList,
   Menu,
+  FileText,
 } from 'lucide-react';
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
@@ -51,7 +52,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
 
   return (
     <aside
-      className={`h-screen bg-white border-r border-gray-200 shadow-md fixed top-0 left-0 z-50 transition-all duration-300
+      className={`h-screen bg-white border-r border-gray-200 shadow-md fixed top-0 left-0 z-50 transition-all duration-300 print:hidden
         ${isOpen ? 'w-64' : 'w-20'} sm:w-${isOpen ? '64' : '20'}
       `}
     >
@@ -80,6 +81,10 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
 
         {user?.rol === 'admin' && (
           <SidebarLink href="/usuarios" icon={Users} label="Usuarios" isOpen={isOpen} />
+        )}
+
+        {(user?.rol === 'admin' || user?.rol === 'tecnico') && (
+          <SidebarLink href="/reportes" icon={FileText} label="Reportes" isOpen={isOpen} />
         )}
 
         <SidebarLink href="/perfil" icon={Settings} label="Configuración" isOpen={isOpen} />

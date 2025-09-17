@@ -19,6 +19,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [cedulaValida, setCedulaValida] = useState(null); // null: no validado, true: válida, false: inválida
   const router = useRouter();
   const { login } = useAuth(); // Usamos el contexto de autenticación
 
@@ -32,7 +33,44 @@ export default function RegisterPage() {
     return /(\d)\1{3,}/.test(value);
   };
 
-  // Validador específico para cédula
+  // Validador específico para cédula ecuatoriana
+  const validadorDeCedulaEcuatoriana = (cedula) => {
+    let cedulaCorrecta = false;
+
+    if (cedula.length === 10) {
+      const tercerDigito = parseInt(cedula.substring(2, 3));
+      if (tercerDigito < 6) {
+        // El ultimo digito se lo considera dígito verificador
+        const coefValCedula = [2, 1, 2, 1, 2, 1, 2, 1, 2];
+        const verificador = parseInt(cedula.substring(9, 10));
+        let suma = 0;
+        let digito = 0;
+
+        for (let i = 0; i < (cedula.length - 1); i++) {
+          digito = parseInt(cedula.substring(i, i + 1)) * coefValCedula[i];
+          suma += ((parseInt((digito % 10) + '') + (parseInt((digito / 10) + ''))));
+        }
+
+        suma = Math.round(suma);
+
+        if ((Math.round(suma % 10) === 0) && (Math.round(suma % 10) === verificador)) {
+          cedulaCorrecta = true;
+        } else if ((10 - (Math.round(suma % 10))) === verificador) {
+          cedulaCorrecta = true;
+        } else {
+          cedulaCorrecta = false;
+        }
+      } else {
+        cedulaCorrecta = false;
+      }
+    } else {
+      cedulaCorrecta = false;
+    }
+
+    return cedulaCorrecta;
+  };
+
+  // Validador específico para cédula con mensajes de error
   const validateCedula = (ci) => {
     const errors = [];
 
@@ -46,6 +84,13 @@ export default function RegisterPage() {
 
     if (hasExcessiveRepeatedNumbers(ci)) {
       errors.push('No se permiten más de 3 números iguales consecutivos');
+    }
+
+    // Si pasa las validaciones básicas y tiene 10 dígitos, validar algoritmo ecuatoriano
+    if (errors.length === 0 && ci.length === 10) {
+      if (!validadorDeCedulaEcuatoriana(ci)) {
+        errors.push('Cédula ecuatoriana inválida');
+      }
     }
 
     return errors;
@@ -84,6 +129,12 @@ export default function RegisterPage() {
     let errors = [];
     if (fieldName === 'ci') {
       errors = validateCedula(value);
+      // Actualizar el estado de cédula válida
+      if (value.length === 10) {
+        setCedulaValida(errors.length === 0);
+      } else {
+        setCedulaValida(null);
+      }
     } else if (fieldName === 'telefono') {
       errors = validateTelefono(value);
     }
@@ -272,6 +323,8 @@ export default function RegisterPage() {
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition ${
                 fieldErrors.ci
                   ? 'border-red-500 focus:ring-red-500/60'
+                  : cedulaValida === true
+                  ? 'border-green-500 focus:ring-green-500/60'
                   : 'border-gray-300 focus:ring-[#6e328a]/60'
               }`}
               placeholder="1234567890"
@@ -283,6 +336,11 @@ export default function RegisterPage() {
                 {fieldErrors.ci.map((error, index) => (
                   <div key={index}>• {error}</div>
                 ))}
+              </div>
+            )}
+            {cedulaValida === true && !fieldErrors.ci && (
+              <div className="mt-1 text-sm text-green-600">
+                ✓ Cédula válida
               </div>
             )}
           </div>

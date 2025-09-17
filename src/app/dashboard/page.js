@@ -5,6 +5,7 @@ import Sidebar from '@/app/components/slidebar';
 import SectionTable from '@/app/components/SectionTable';
 import CardsMovilizaciones from '@/app/components/CardsMovilizaciones';
 import { Diagrama } from '@/app/components/diagrama';
+import { GraficaPastelEstados } from '@/app/components/GraficaPastelEstados';
 import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
 
@@ -63,11 +64,19 @@ export default function DashboardHome() {
 
         {user.rol === 'admin' && (
           <div className="w-full px-4 pt-4">
-            <div className="bg-white border border-gray-200 rounded-xl shadow p-4">
-              <h3 className="text-lg font-semibold text-[#6e328a] mb-3">
-                Resumen de Actividad
-              </h3>
-              <Diagrama />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white border border-gray-200 rounded-xl shadow p-4">
+                <h3 className="text-lg font-semibold text-[#6e328a] mb-3">
+                  Resumen de Actividad
+                </h3>
+                <Diagrama />
+              </div>
+              <div className="bg-white border border-gray-200 rounded-xl shadow p-4">
+                <h3 className="text-lg font-semibold text-[#6e328a] mb-3">
+                  Estados de Movilizaciones
+                </h3>
+                <GraficaPastelEstados />
+              </div>
             </div>
           </div>
         )}
