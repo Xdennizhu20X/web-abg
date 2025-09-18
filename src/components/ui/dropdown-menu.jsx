@@ -7,29 +7,39 @@ const DropdownMenu = ({ children }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const menuRef = React.useRef(null);
   const triggerRef = React.useRef(null);
+  const contentRef = React.useRef(null);
 
   React.useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+      // Verificar si el clic fue fuera tanto del trigger como del content
+      if (
+        triggerRef.current &&
+        !triggerRef.current.contains(event.target) &&
+        contentRef.current &&
+        !contentRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isOpen]);
 
   return (
     <div ref={menuRef} className="relative inline-block text-left">
       {React.Children.map(children, (child) =>
-        React.cloneElement(child, { isOpen, setIsOpen, triggerRef })
+        React.cloneElement(child, { isOpen, setIsOpen, triggerRef, contentRef })
       )}
     </div>
   );
 };
 
 const DropdownMenuTrigger = React.forwardRef(
-  ({ className, children, isOpen, setIsOpen, triggerRef, ...props }, ref) => {
+  ({ className, children, isOpen, setIsOpen, triggerRef, contentRef, ...props }, ref) => {
     return (
       <button
         ref={(node) => {
@@ -55,7 +65,7 @@ const DropdownMenuTrigger = React.forwardRef(
 DropdownMenuTrigger.displayName = 'DropdownMenuTrigger';
 
 const DropdownMenuContent = React.forwardRef(
-  ({ className, align = 'end', isOpen, setIsOpen, triggerRef, ...props }, ref) => {
+  ({ className, align = 'end', isOpen, setIsOpen, triggerRef, contentRef, ...props }, ref) => {
     const [position, setPosition] = React.useState({ top: 0, left: 0 });
 
     React.useEffect(() => {
@@ -79,7 +89,13 @@ const DropdownMenuContent = React.forwardRef(
 
     return createPortal(
       <div
-        ref={ref}
+        ref={(node) => {
+          if (contentRef) contentRef.current = node;
+          if (ref) {
+            if (typeof ref === 'function') ref(node);
+            else ref.current = node;
+          }
+        }}
         className={cn(
           'fixed z-50 min-w-[8rem] overflow-hidden rounded-md border bg-white p-1 text-gray-950 shadow-md animate-in fade-in-0 zoom-in-95',
           className
@@ -88,6 +104,7 @@ const DropdownMenuContent = React.forwardRef(
           top: position.top,
           left: position.left,
         }}
+        onClick={(e) => e.stopPropagation()}
         {...props}
       />,
       document.body
