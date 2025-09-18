@@ -12,7 +12,7 @@ export default function ReporteMovilizaciones() {
     fechaInicio: '',
     fechaFin: '',
     estado: '',
-    granjero: ''
+    ganadero: ''
   });
   const printRef = useRef();
 
@@ -60,9 +60,9 @@ export default function ReporteMovilizaciones() {
       );
     }
 
-    if (filters.granjero) {
+    if (filters.ganadero) {
       filtered = filtered.filter(item =>
-        item.Usuario?.nombre?.toLowerCase().includes(filters.granjero.toLowerCase())
+        item.Usuario?.nombre?.toLowerCase().includes(filters.ganadero.toLowerCase())
       );
     }
 
@@ -104,7 +104,7 @@ export default function ReporteMovilizaciones() {
 
   const exportToCSV = () => {
     const csvContent = [
-      ['Granjero', 'Estado', 'Fecha de Solicitud', 'ID', 'Animales', 'Aves'].join(','),
+      ['Ganadero', 'Estado', 'Fecha de Solicitud', 'ID', 'Animales', 'Aves'].join(','),
       ...filteredData.map(item => [
         item.Usuario?.nombre || 'Sin nombre',
         normalizeEstado(item.estado),
@@ -183,13 +183,13 @@ export default function ReporteMovilizaciones() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Granjero
+                Ganadero
               </label>
               <input
                 type="text"
                 placeholder="Buscar por nombre..."
-                value={filters.granjero}
-                onChange={(e) => setFilters(prev => ({ ...prev, granjero: e.target.value }))}
+                value={filters.ganadero}
+                onChange={(e) => setFilters(prev => ({ ...prev, ganadero: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#6e328a] focus:border-[#6e328a]"
               />
             </div>
@@ -263,7 +263,7 @@ export default function ReporteMovilizaciones() {
                   ID
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Granjero
+                  Ganadero
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Estado
